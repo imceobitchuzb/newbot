@@ -4,7 +4,8 @@ import { useMemo } from "react";
 import katex from "katex";
 
 export interface MathTextProps {
-  content: string;
+  content?: string;
+  text?: string;
   className?: string;
 }
 
@@ -12,9 +13,12 @@ export interface MathTextProps {
  * Safely parses markdown/math strings containing $...$ (inline) or $$...$$ (block)
  * and renders KaTeX mathematical expressions safely.
  */
-export function MathText({ content, className = "" }: MathTextProps) {
+export function MathText({ content, text, className = "" }: MathTextProps) {
+  const textContent = content || text || "";
+
   const renderedElements = useMemo(() => {
-    if (!content) return null;
+    if (!textContent) return null;
+
 
     // Split by $$...$$ first, then $...$
     const parts: { type: "text" | "inline-math" | "block-math"; value: string }[] = [];
@@ -24,11 +28,11 @@ export function MathText({ content, className = "" }: MathTextProps) {
     let lastIndex = 0;
     let match: RegExpExecArray | null;
 
-    while ((match = mathRegex.exec(content)) !== null) {
+    while ((match = mathRegex.exec(textContent)) !== null) {
       if (match.index > lastIndex) {
         parts.push({
           type: "text",
-          value: content.slice(lastIndex, match.index),
+          value: textContent.slice(lastIndex, match.index),
         });
       }
 
@@ -48,12 +52,13 @@ export function MathText({ content, className = "" }: MathTextProps) {
       lastIndex = match.index + matchStr.length;
     }
 
-    if (lastIndex < content.length) {
+    if (lastIndex < textContent.length) {
       parts.push({
         type: "text",
-        value: content.slice(lastIndex),
+        value: textContent.slice(lastIndex),
       });
     }
+
 
     return parts.map((part, index) => {
       if (part.type === "block-math") {

@@ -264,26 +264,83 @@ CREATE TABLE mistakes (
 CREATE INDEX idx_mistakes_user_review ON mistakes(user_id, remediation_status, next_review_at);
 ```
 
-### 3.6. Diagnostic & Full SAT Exams
+### 3.6. Diagnostic Module (Implemented in Migration 004)
 ```sql
-CREATE TABLE diagnostic_tests (
+CREATE TABLE diagnostic_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(255) NOT NULL,
-    total_questions INT DEFAULT 30,
-    time_limit_minutes INT DEFAULT 45
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(32) DEFAULT 'IN_PROGRESS' NOT NULL, -- 'NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ABANDONED'
+    current_module VARCHAR(32) DEFAULT 'MATH' NOT NULL, -- 'MATH', 'READING_WRITING'
+    current_question_index INT DEFAULT 0 NOT NULL,
+    started_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
+
+CREATE INDEX ix_diagnostic_sessions_user_id ON diagnostic_sessions(user_id);
+CREATE INDEX ix_diagnostic_sessions_status ON diagnostic_sessions(status);
+
+CREATE TABLE diagnostic_modules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES diagnostic_sessions(id) ON DELETE CASCADE,
+    subject VARCHAR(32) NOT NULL, -- 'MATH', 'READING_WRITING'
+    module_number INT NOT NULL,
+    status VARCHAR(32) DEFAULT 'NOT_STARTED' NOT NULL, -- 'NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    CONSTRAINT uq_diagnostic_modules_session_module_number UNIQUE (session_id, module_number)
+);
+
+CREATE INDEX ix_diagnostic_modules_session_id ON diagnostic_modules(session_id);
+
+CREATE TABLE diagnostic_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    module_id UUID NOT NULL REFERENCES diagnostic_modules(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    order_index INT NOT NULL,
+    selected_option_id UUID REFERENCES question_options(id) ON DELETE SET NULL,
+    attempt_id UUID REFERENCES question_attempts(id) ON DELETE SET NULL,
+    is_answered BOOLEAN DEFAULT FALSE NOT NULL,
+    is_correct BOOLEAN,
+    time_spent_seconds INT DEFAULT 0 NOT NULL,
+    answered_at TIMESTAMPTZ,
+    CONSTRAINT uq_diagnostic_questions_module_order UNIQUE (module_id, order_index),
+    CONSTRAINT uq_diagnostic_questions_module_question UNIQUE (module_id, question_id)
+);
+
+CREATE INDEX ix_diagnostic_questions_module_id ON diagnostic_questions(module_id);
+CREATE INDEX ix_diagnostic_questions_question_id ON diagnostic_questions(question_id);
 
 CREATE TABLE diagnostic_results (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    diagnostic_test_id UUID REFERENCES diagnostic_tests(id) ON DELETE SET NULL,
-    total_score INT NOT NULL,
-    math_score INT NOT NULL,
-    rw_score INT NOT NULL,
-    weaknesses JSONB NOT NULL, -- Array of subtopic IDs / names
-    strengths JSONB NOT NULL,
-    completed_at TIMESTAMPTZ DEFAULT NOW()
+    session_id UUID UNIQUE NOT NULL REFERENCES diagnostic_sessions(id) ON DELETE CASCADE,
+    math_correct INT NOT NULL,
+    math_total INT DEFAULT 20 NOT NULL,
+    rw_correct INT NOT NULL,
+    rw_total INT DEFAULT 20 NOT NULL,
+    math_accuracy FLOAT NOT NULL,
+    rw_accuracy FLOAT NOT NULL,
+    total_accuracy FLOAT NOT NULL,
+    estimated_math_low INT NOT NULL,
+    estimated_math_high INT NOT NULL,
+    estimated_rw_low INT NOT NULL,
+    estimated_rw_high INT NOT NULL,
+    estimated_total_low INT NOT NULL,
+    estimated_total_high INT NOT NULL,
+    duration_seconds INT DEFAULT 0 NOT NULL,
+    domain_breakdown JSON NOT NULL,
+    weak_domains JSON NOT NULL,
+    strong_domains JSON NOT NULL,
+    completed_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
+
+CREATE INDEX ix_diagnostic_results_session_id ON diagnostic_results(session_id);
+```
+
+### 3.7. Full SAT Exams (Future Phase)
+
 
 CREATE TABLE full_tests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

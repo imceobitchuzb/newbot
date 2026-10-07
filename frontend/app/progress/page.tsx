@@ -36,8 +36,14 @@ export default function ProgressPage() {
               <span className="text-[10px] uppercase tracking-wider text-slate-400 block mb-1">
                 Current Score
               </span>
-              <p className="text-xl font-bold text-slate-400">Not measured</p>
-              <p className="text-[10px] text-slate-400 mt-1">Requires Diagnostic</p>
+              <p className={`text-xl font-bold ${diagnosticStatus === "completed" ? "text-slate-100" : "text-slate-400"}`}>
+                {diagnosticStatus === "completed" && (user?.profile?.math_estimate || user?.profile?.rw_estimate)
+                  ? (user.profile.math_estimate || 350) + (user.profile.rw_estimate || 350)
+                  : "Not measured"}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-1">
+                {diagnosticStatus === "completed" ? "Calibrated Baseline" : "Requires Diagnostic"}
+              </p>
             </div>
 
             <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
@@ -53,11 +59,15 @@ export default function ProgressPage() {
           <div className="pt-2 border-t border-slate-800 space-y-2 text-xs">
             <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900/60 border border-slate-800/80">
               <span className="text-slate-300">Math Section (200-800)</span>
-              <span className="font-medium text-slate-400">Not measured</span>
+              <span className={`font-semibold ${diagnosticStatus === "completed" && user?.profile?.math_estimate ? "text-blue-400" : "text-slate-400"}`}>
+                {diagnosticStatus === "completed" && user?.profile?.math_estimate ? `~${user.profile.math_estimate}` : "Not measured"}
+              </span>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900/60 border border-slate-800/80">
               <span className="text-slate-300">Reading & Writing (200-800)</span>
-              <span className="font-medium text-slate-400">Not measured</span>
+              <span className={`font-semibold ${diagnosticStatus === "completed" && user?.profile?.rw_estimate ? "text-emerald-400" : "text-slate-400"}`}>
+                {diagnosticStatus === "completed" && user?.profile?.rw_estimate ? `~${user.profile.rw_estimate}` : "Not measured"}
+              </span>
             </div>
           </div>
         </Card>
@@ -75,6 +85,27 @@ export default function ProgressPage() {
             <Link href="/diagnostic" className="block">
               <Button size="md" className="w-full">
                 <span>Take Diagnostic</span>
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </Link>
+          </Card>
+        )}
+
+        {diagnosticStatus === "completed" && (
+          <Card className="p-4 bg-slate-900/70 border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
+                <Target className="w-4 h-4" />
+                <span>Baseline Calibrated</span>
+              </div>
+              <span className="text-[10px] text-slate-400">40 Questions Evaluated</span>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Your baseline diagnostic is complete. Review your comprehensive domain strengths and weak area breakdown:
+            </p>
+            <Link href="/diagnostic/result" className="block">
+              <Button size="md" variant="secondary" className="w-full justify-center">
+                <span>View Full Diagnostic Report</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>

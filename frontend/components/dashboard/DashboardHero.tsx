@@ -31,10 +31,18 @@ export function DashboardHero({ user }: DashboardHeroProps) {
       <div className="flex items-baseline justify-between pt-1">
         <div>
           <p className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">
-            Baseline
+            {diagnosticStatus === "completed" ? "Calibrated Baseline" : "Estimated Baseline"}
           </p>
-          <p className="text-3xl font-extrabold text-slate-300">700</p>
-          <p className="text-[10px] text-slate-400">M: ~360 | RW: ~340</p>
+          <p className="text-3xl font-extrabold text-slate-300">
+            {diagnosticStatus === "completed" && (user.profile?.math_estimate || user.profile?.rw_estimate)
+              ? (user.profile.math_estimate || 350) + (user.profile.rw_estimate || 350)
+              : 700}
+          </p>
+          <p className="text-[10px] text-slate-400">
+            {diagnosticStatus === "completed" && user.profile?.math_estimate
+              ? `M: ~${user.profile.math_estimate} | RW: ~${user.profile.rw_estimate}`
+              : "M: ~360 | RW: ~340"}
+          </p>
         </div>
 
         <div className="text-slate-400 font-light text-2xl">➔</div>
@@ -81,11 +89,19 @@ export function DashboardHero({ user }: DashboardHeroProps) {
         )}
 
         {diagnosticStatus === "completed" && (
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-300">Diagnostic Calibrated</span>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
-              Completed
-            </span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-300">Diagnostic Calibrated</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
+                Completed
+              </span>
+            </div>
+            <Link href="/diagnostic/result" className="block">
+              <Button size="sm" variant="secondary" className="w-full justify-center text-xs">
+                <span>View Diagnostic Report</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
+            </Link>
           </div>
         )}
       </div>

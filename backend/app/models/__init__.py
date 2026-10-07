@@ -1,6 +1,15 @@
 from backend.app.models.base import Base, TimestampMixin
+from backend.app.models.diagnostic import (
+    DiagnosticModule,
+    DiagnosticQuestion,
+    DiagnosticResult,
+    DiagnosticSession,
+)
 from backend.app.models.enums import (
+    DiagnosticModuleStatus,
+    DiagnosticStatus,
     Difficulty,
+    DomainClassification,
     MathDomain,
     QuestionStatus,
     QuestionType,
@@ -25,10 +34,17 @@ __all__ = [
     "Question",
     "QuestionOption",
     "QuestionAttempt",
+    "DiagnosticSession",
+    "DiagnosticModule",
+    "DiagnosticQuestion",
+    "DiagnosticResult",
     "Subject",
     "MathDomain",
     "ReadingWritingDomain",
     "Difficulty",
     "QuestionType",
     "QuestionStatus",
+    "DiagnosticStatus",
+    "DiagnosticModuleStatus",
+    "DomainClassification",
 ]

@@ -76,10 +76,22 @@ export default function ProfilePage() {
                   <Award className="w-4 h-4 text-amber-400" />
                   <span className="text-slate-300">Diagnostic Status</span>
                 </div>
-                <span className="capitalize px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">
-                  {user.profile?.diagnostic_status.replace("_", " ") || "Not started"}
-                </span>
+                <div className="text-right">
+                  <span className={`capitalize px-2 py-0.5 rounded text-[11px] font-medium ${
+                    user.profile?.diagnostic_status === "completed"
+                      ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300"
+                      : "bg-slate-800 text-slate-300"
+                  }`}>
+                    {user.profile?.diagnostic_status.replace("_", " ") || "Not started"}
+                  </span>
+                  {user.profile?.diagnostic_status === "completed" && user.profile.math_estimate && (
+                    <p className="text-[10px] text-cyan-400 mt-0.5">
+                      M: {user.profile.math_estimate} | RW: {user.profile.rw_estimate}
+                    </p>
+                  )}
+                </div>
               </div>
+
 
               <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950/40 border border-slate-800/60">
                 <div className="flex items-center gap-2">

@@ -120,3 +120,42 @@ The band width narrows as:
 - Total questions solved increases ($N > 200$).
 - Recent Full SAT Module simulations are logged.
 - Consistency across all 8 SAT domains stabilizes.
+
+---
+
+## 7. Phase 5 Diagnostic Calibration Engine
+
+### 7.1. Diagnostic Structure & Controlled Selection
+Unlike adaptive practice (Phase 8), the baseline Diagnostic is a **controlled, non-adaptive calibration instrument**:
+- **Math Module**: Exactly 20 questions (5 Algebra, 5 Advanced Math, 5 Problem-Solving & Data Analysis, 5 Geometry & Trigonometry).
+- **Reading & Writing Module**: Exactly 20 questions (5 Information & Ideas, 5 Craft & Structure, 5 Expression of Ideas, 5 Standard English Conventions).
+- **Difficulty Balance**: Targeted at ~25% Easy (5 questions), ~50% Medium (10 questions), ~25% Hard (5 questions) per section.
+- **Uniqueness & Anti-Duplication**: Exactly 40 unique question IDs assigned to the session. Duplicate questions within a session are strictly prevented.
+
+### 7.2. Deterministic Scoring Algorithm
+For section raw correct count $C \in [0, 20]$ with ratio $r = C / 20.0$:
+- **Midpoint Scaled Score**:
+  $$S_{mid} = 200 + \text{round}\left(\frac{600 \cdot r}{10}\right) \cdot 10$$
+- **Score Range**:
+  $$S_{low} = \max(200, S_{mid} - 30), \quad S_{high} = \min(800, S_{mid} + 30)$$
+  - Boundary: $C = 0 \implies [200, 240]$
+  - Boundary: $C = 10 (50\%) \implies [470, 530]$
+  - Boundary: $C = 20 (100\%) \implies [760, 800]$
+- **Total Estimated Range**:
+  $$Total_{low} = Math_{low} + RW_{low}, \quad Total_{high} = Math_{high} + RW_{high}$$
+
+### 7.3. Weak & Strong Domain Classification
+Configurable accuracy thresholds classify each of the 8 SAT domains:
+- **`WEAK`**: Accuracy $< 60\%$ (Flagged as priority focus areas for practice and mistake review)
+- **`MODERATE`**: $60\% \le \text{Accuracy} < 75\%$
+- **`STRONG`**: Accuracy $\ge 75\%$ (Foundational mastery confirmed)
+
+### 7.4. UserProfile Synchronization
+Upon diagnostic completion:
+- `UserProfile.diagnostic_status` transitions to `completed`.
+- `UserProfile.math_estimate` and `UserProfile.rw_estimate` are populated with section midpoints.
+- `UserProfile.target_score` (default 1400) is **strictly preserved** (never overwritten by baseline results).
+
+### 7.5. Diagnostic vs. Official SAT Score Disclaimer
+The calculated range is an algorithmic **diagnostic approximation** designed for EdTech study pacing and gap identification. It is explicitly labeled as an estimate and does not represent official College Board psychometric scaling.
+

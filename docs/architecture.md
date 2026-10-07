@@ -157,7 +157,7 @@ All endpoints are versioned under `/api/v1/`:
 | `/api/v1/lessons` | Topic lessons, concept walkthroughs, SAT shortcuts |
 | `/api/v1/desmos` | Desmos interactive guides, shortcuts, and embedded graphs |
 | `/api/v1/ai/tutor` | AI Tutor assistance (HINT, EXPLAIN, SOLVE, ANOTHER_METHOD, SAT_TRICK) |
-| `/api/v1/tests/diagnostic`| Diagnostic test initialization and submission |
+| `/api/v1/diagnostics` | Diagnostic test lifecycle: start/resume, get current progress, submit answers, and retrieve score estimation reports (`/latest/result`, `/{id}/result`) |
 | `/api/v1/tests/full` | Full SAT exam simulations (timed modules) |
 | `/api/v1/analytics/progress`| Detailed historical performance and mastery heatmaps |
 | `/api/v1/gamification` | XP, levels, streak tracking, daily challenges, achievements |

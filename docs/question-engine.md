@@ -170,7 +170,10 @@ Before submission:
 4. Only upon submitting a valid attempt does the API return `AttemptResultResponse` containing `is_correct`, `correct_answer`, `explanation`, `sat_shortcut`, and `desmos_expression`.
 
 ### 6.5. Seed Content & Originality
-- **Total Initial Questions**: 24 items (12 Math, 12 Reading & Writing) across all official domains and difficulty levels (`EASY`, `MEDIUM`, `HARD`).
+- **Total Initial Questions**: 48 items (24 Math, 24 Reading & Writing) across all official 8 domains and difficulty levels (`EASY`, `MEDIUM`, `HARD`).
+  - **Math (24 items)**: 6 Algebra, 6 Advanced Math, 6 Problem-Solving & Data Analysis, 6 Geometry & Trigonometry.
+  - **Reading & Writing (24 items)**: 6 Information & Ideas, 6 Craft & Structure, 6 Expression of Ideas, 6 Standard English Conventions.
 - **Copyright Compliance**: 100% original educational material authored to mirror Digital SAT psychometrics and trap structures with zero scraped College Board or Khan Academy items.
-- Seeded via `backend/app/seed/questions.py` and accessible in the interactive demo at `/practice/demo`.
+- Seeded via `backend/app/seed/questions.py` and actively queried by `DiagnosticQuestionSelector` and practice sessions.
+
 

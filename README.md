@@ -198,3 +198,29 @@ Visit `http://localhost:3000/practice/demo` to try the Question Engine directly:
 - Filter questions by Subject, Domain, and Difficulty.
 - Step through interactive SAT questions with instant submission, correctness feedback, explanations, and SAT shortcuts.
 
+---
+
+## 8. Real Diagnostic Module
+
+### 8.1. Diagnostic Structure & Calibration
+- **Length**: Exactly 40 questions (Module 1: 20 Math questions; Module 2: 20 Reading & Writing questions).
+- **Balanced Coverage**: 5 questions from each of the 8 Digital SAT domains, with controlled difficulty mix (~25% Easy, ~50% Medium, ~25% Hard).
+- **Zero In-Test Leaks**: Answers, hints, and explanations remain hidden throughout the assessment until completion.
+- **Estimated Score Range**: Deterministic calculation mapping section performance to SAT ranges ($200 - 800$ per section, $400 - 1600$ total).
+- **Weak Domain Diagnosis**: Classifies each domain as `WEAK` ($<60\%$), `MODERATE`, or `STRONG` ($\ge 75\%$) to anchor personalized study plans.
+- **User Profile Sync**: Marks `diagnostic_status = "completed"` and sets baseline estimates while preserving the student's target score.
+
+### 8.2. Diagnostic API Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/diagnostics` | Start a new diagnostic test or resume active session |
+| `GET` | `/api/v1/diagnostics/current` | Get current active diagnostic progress and next question |
+| `POST` | `/api/v1/diagnostics/{id}/questions/{qid}/answer` | Submit an answer to an assigned diagnostic question |
+| `GET` | `/api/v1/diagnostics/{id}/result` | Retrieve completed diagnostic report and score ranges |
+| `GET` | `/api/v1/diagnostics/latest/result` | Retrieve most recent completed diagnostic result |
+
+### 8.3. Frontend Routes
+- `/diagnostic`: Comprehensive intro screen with Start/Resume CTA and interactive question runner.
+- `/diagnostic/result`: Calibrated score report with total & section ranges, strong areas, and weak domain growth priorities.
+
+
