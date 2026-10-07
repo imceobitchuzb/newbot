@@ -130,47 +130,71 @@ CREATE TABLE lesson_progress (
 );
 ```
 
-### 3.3. Question Engine & Choices
+### 3.3. Question Engine, Passages & Options (Implemented in Migration 003)
 ```sql
-CREATE TABLE questions (
+CREATE TABLE passages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    subtopic_id UUID REFERENCES subtopics(id) ON DELETE SET NULL,
-    section VARCHAR(32) NOT NULL, -- 'math', 'reading_writing'
-    domain VARCHAR(64) NOT NULL,
-    skill VARCHAR(128) NOT NULL,
-    passage_text TEXT,            -- For R&W passages or data contexts
-    question_text TEXT NOT NULL,
-    question_type VARCHAR(32) DEFAULT 'multiple_choice', -- 'multiple_choice', 'student_produced'
-    correct_answer VARCHAR(255) NOT NULL,
-    explanation TEXT NOT NULL,
-    hint_step1 TEXT,
-    hint_step2 TEXT,
-    sat_shortcut TEXT,
-    difficulty VARCHAR(16) NOT NULL, -- 'easy', 'medium', 'hard'
-    difficulty_rating FLOAT DEFAULT 1.0, -- Elo/IRT scale (e.g. 0.5 to 3.0)
-    estimated_time INT DEFAULT 90, -- Seconds
-    source_type VARCHAR(64) DEFAULT 'original',
-    tags JSONB DEFAULT '[]'::jsonb,
-    has_desmos_solution BOOLEAN DEFAULT FALSE,
-    desmos_expression TEXT,
+    title VARCHAR(255),
+    passage_text TEXT NOT NULL,
+    source_info TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_questions_section_diff ON questions(section, difficulty);
-CREATE INDEX idx_questions_subtopic ON questions(subtopic_id);
-CREATE INDEX idx_questions_tags ON questions USING GIN (tags);
-
-CREATE TABLE question_choices (
+CREATE TABLE questions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
-    choice_letter VARCHAR(4) NOT NULL, -- 'A', 'B', 'C', 'D'
-    choice_text TEXT NOT NULL,
-    order_index INT DEFAULT 0
+    passage_id UUID REFERENCES passages(id) ON DELETE SET NULL,
+    subject VARCHAR(32) NOT NULL, -- 'MATH', 'READING_WRITING'
+    domain VARCHAR(64) NOT NULL,
+    skill VARCHAR(128) NOT NULL,
+    subskill VARCHAR(128),
+    question_type VARCHAR(32) DEFAULT 'MULTIPLE_CHOICE' NOT NULL, -- 'MULTIPLE_CHOICE', 'SPR'
+    difficulty VARCHAR(16) NOT NULL, -- 'EASY', 'MEDIUM', 'HARD'
+    question_text TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    hint TEXT,
+    sat_shortcut TEXT,
+    estimated_time_seconds INT DEFAULT 75 NOT NULL,
+    desmos_allowed BOOLEAN DEFAULT TRUE NOT NULL,
+    desmos_recommended BOOLEAN DEFAULT FALSE NOT NULL,
+    status VARCHAR(32) DEFAULT 'PUBLISHED' NOT NULL, -- 'DRAFT', 'PUBLISHED', 'ARCHIVED'
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX idx_question_choices_qid ON question_choices(question_id);
+CREATE INDEX ix_questions_passage_id ON questions(passage_id);
+CREATE INDEX ix_questions_subject ON questions(subject);
+CREATE INDEX ix_questions_domain ON questions(domain);
+CREATE INDEX ix_questions_skill ON questions(skill);
+CREATE INDEX ix_questions_difficulty ON questions(difficulty);
+CREATE INDEX ix_questions_status ON questions(status);
+
+CREATE TABLE question_options (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    label VARCHAR(4) NOT NULL, -- 'A', 'B', 'C', 'D'
+    text TEXT NOT NULL,
+    order_index INT DEFAULT 0 NOT NULL,
+    is_correct BOOLEAN DEFAULT FALSE NOT NULL
+);
+
+CREATE INDEX ix_question_options_question_id ON question_options(question_id);
+
+CREATE TABLE question_attempts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    selected_option_id UUID NOT NULL REFERENCES question_options(id) ON DELETE CASCADE,
+    is_correct BOOLEAN NOT NULL,
+    time_spent_seconds INT DEFAULT 0 NOT NULL,
+    answered_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX ix_question_attempts_user_id ON question_attempts(user_id);
+CREATE INDEX ix_question_attempts_question_id ON question_attempts(question_id);
+CREATE INDEX ix_question_attempts_answered_at ON question_attempts(answered_at);
 ```
+
 
 ### 3.4. Attempts & User Progress
 ```sql

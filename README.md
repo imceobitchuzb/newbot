@@ -180,6 +180,21 @@ To develop and test outside of Telegram:
 - Start backend and frontend servers as usual.
 - Navigate to `http://localhost:3000`.
 - The app detects that `Telegram.WebApp` is not active and renders **Development Browser Mode**.
-- Click **Connect as Dev Student** to obtain a development session (`POST /api/v1/auth/dev`).
 - This allows full local UI and API verification without launching the Telegram client.
 - *Note: `POST /api/v1/auth/dev` is strictly disabled when `APP_ENV=production`.*
+
+---
+
+## 7. Question Engine & Interactive Practice Demo
+
+### 7.1. Question Engine Features
+- **Extensible Schema**: `passages`, `questions`, `question_options`, and `question_attempts` backed by PostgreSQL / SQLite.
+- **Strict Answer Protection**: Answer keys, correct flags, and full explanations are never leaked across `GET` queries. They are returned only after verified submission (`POST /api/v1/questions/{id}/attempt`).
+- **Math Notation**: Integrated KaTeX for LaTeX equations (inline `$x^2$` and block `$$\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$`).
+- **Seed Content**: 24 original SAT practice questions across Math (Algebra, Advanced Math, Problem-Solving, Geometry) and Reading & Writing (Information & Ideas, Craft & Structure, Expression of Ideas, Standard English Conventions).
+
+### 7.2. Interactive Demo Route
+Visit `http://localhost:3000/practice/demo` to try the Question Engine directly:
+- Filter questions by Subject, Domain, and Difficulty.
+- Step through interactive SAT questions with instant submission, correctness feedback, explanations, and SAT shortcuts.
+

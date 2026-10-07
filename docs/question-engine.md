@@ -135,3 +135,42 @@ sequenceDiagram
     end
     API-->>Student: Display instant feedback modal with remediation options
 ```
+
+---
+
+## 6. Phase 4 Implementation Reference
+
+### 6.1. Implemented Database Entities
+- **`passages` (`Passage`)**: Shared text contexts for Reading & Writing questions or complex multi-part problems.
+- **`questions` (`Question`)**: Core question bank entity with canonical taxonomy, difficulty rating, estimated completion time, status lifecycle (`DRAFT`, `PUBLISHED`, `ARCHIVED`), and Desmos metadata.
+- **`question_options` (`QuestionOption`)**: Multiple-choice options linked to questions (`A`, `B`, `C`, `D`) with choice text and internal `is_correct` flag.
+- **`question_attempts` (`QuestionAttempt`)**: Recorded student submissions with chosen option or SPR answer, score verification (`is_correct`), duration (`time_spent_seconds`), hints used, and timestamp.
+
+### 6.2. Canonical Enums (`backend/app/models/enums.py`)
+- **`Subject`**: `MATH`, `READING_WRITING`
+- **`MathDomain`**: `ALGEBRA`, `ADVANCED_MATH`, `PROBLEM_SOLVING_DATA_ANALYSIS`, `GEOMETRY_TRIGONOMETRY`
+- **`ReadingWritingDomain`**: `INFORMATION_IDEAS`, `CRAFT_STRUCTURE`, `EXPRESSION_OF_IDEAS`, `STANDARD_ENGLISH_CONVENTIONS`
+- **`Difficulty`**: `EASY`, `MEDIUM`, `HARD`
+- **`QuestionType`**: `MULTIPLE_CHOICE`, `SPR`
+- **`QuestionStatus`**: `DRAFT`, `PUBLISHED`, `ARCHIVED`
+
+### 6.3. API Endpoints
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/api/v1/questions` | Bearer JWT | Filter published questions by subject, domain, skill, difficulty |
+| `GET` | `/api/v1/questions/random` | Bearer JWT | Retrieve a single random question matching optional filters |
+| `GET` | `/api/v1/questions/{id}` | Bearer JWT | Retrieve published question details (answer keys suppressed) |
+| `POST` | `/api/v1/questions/{id}/attempt` | Bearer JWT | Submit answer attempt; returns verified correctness & explanation |
+
+### 6.4. Security: Answer Key Suppression
+Before submission:
+1. `QuestionOptionPublic` contains ONLY `id`, `choice_letter`, `choice_text`, and `order_index`. The `is_correct` boolean is strictly excluded from the schema.
+2. `QuestionPublic` strips `correct_answer`, `explanation`, `sat_shortcut`, and `desmos_expression`.
+3. An attempt submission enforces cross-question integrity: if `chosen_option_id` belongs to another question, the request is rejected with `422 Unprocessable Content`.
+4. Only upon submitting a valid attempt does the API return `AttemptResultResponse` containing `is_correct`, `correct_answer`, `explanation`, `sat_shortcut`, and `desmos_expression`.
+
+### 6.5. Seed Content & Originality
+- **Total Initial Questions**: 24 items (12 Math, 12 Reading & Writing) across all official domains and difficulty levels (`EASY`, `MEDIUM`, `HARD`).
+- **Copyright Compliance**: 100% original educational material authored to mirror Digital SAT psychometrics and trap structures with zero scraped College Board or Khan Academy items.
+- Seeded via `backend/app/seed/questions.py` and accessible in the interactive demo at `/practice/demo`.
+

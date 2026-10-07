@@ -151,8 +151,7 @@ All endpoints are versioned under `/api/v1/`:
 | `/api/v1/auth/telegram` | Validates initData, returns user session/JWT or user profile |
 | `/api/v1/users/me` | Current user profile, target score, baseline, preferences |
 | `/api/v1/dashboard` | Aggregated dashboard: current estimate, streak, today's plan, weak topics |
-| `/api/v1/questions` | Filtered questions, random practice sets, search |
-| `/api/v1/attempts` | Submit question attempt, receive immediate evaluation and mistake tagging |
+| `/api/v1/questions` | Filtered questions, random selection, individual question lookup, and attempt submission (`POST /api/v1/questions/{id}/attempt`) |
 | `/api/v1/adaptive/next` | Adaptive question recommendation engine |
 | `/api/v1/mistakes` | Mistake book querying, mistake categorization, retry queue |
 | `/api/v1/lessons` | Topic lessons, concept walkthroughs, SAT shortcuts |
