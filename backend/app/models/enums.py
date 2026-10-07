@@ -55,3 +55,17 @@ class DomainClassification(str, Enum):
     MODERATE = "MODERATE"
     STRONG = "STRONG"
 
+
+class MathPracticeSessionStatus(str, Enum):
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    ABANDONED = "ABANDONED"
+
+
+class SkillMasteryLevel(str, Enum):
+    NOT_STARTED = "NOT_STARTED"
+    LEARNING = "LEARNING"
+    PRACTICING = "PRACTICING"
+    STRONG = "STRONG"
+
+

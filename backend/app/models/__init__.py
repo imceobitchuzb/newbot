@@ -11,10 +11,16 @@ from backend.app.models.enums import (
     Difficulty,
     DomainClassification,
     MathDomain,
+    MathPracticeSessionStatus,
     QuestionStatus,
     QuestionType,
     ReadingWritingDomain,
+    SkillMasteryLevel,
     Subject,
+)
+from backend.app.models.math_practice import (
+    MathPracticeQuestion,
+    MathPracticeSession,
 )
 from backend.app.models.profile import UserProfile
 from backend.app.models.question import (
@@ -38,6 +44,8 @@ __all__ = [
     "DiagnosticModule",
     "DiagnosticQuestion",
     "DiagnosticResult",
+    "MathPracticeSession",
+    "MathPracticeQuestion",
     "Subject",
     "MathDomain",
     "ReadingWritingDomain",
@@ -47,4 +55,7 @@ __all__ = [
     "DiagnosticStatus",
     "DiagnosticModuleStatus",
     "DomainClassification",
+    "MathPracticeSessionStatus",
+    "SkillMasteryLevel",
 ]
+

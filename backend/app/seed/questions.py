@@ -12,10 +12,12 @@ from backend.app.models.enums import (
     ReadingWritingDomain,
     Subject,
 )
+from backend.app.core.math_taxonomy import normalize_skill
 from backend.app.models.question import Passage, Question, QuestionOption
+from backend.app.seed.math_questions_seed import ADDITIONAL_MATH_QUESTIONS
 
-# 24 Original SAT-Style Questions (12 Math + 12 Reading & Writing)
-SEED_QUESTIONS_DATA = [
+# Original SAT Questions (Math + Reading & Writing)
+INITIAL_SEED_QUESTIONS = [
     # --- MATH (ALGEBRA) ---
     {
         "subject": Subject.MATH.value,
@@ -1001,6 +1003,7 @@ SEED_QUESTIONS_DATA = [
     },
 ]
 
+SEED_QUESTIONS_DATA = INITIAL_SEED_QUESTIONS + ADDITIONAL_MATH_QUESTIONS
 
 
 async def seed_questions(db: AsyncSession) -> int:
@@ -1018,10 +1021,13 @@ async def seed_questions(db: AsyncSession) -> int:
         if existing.scalar_one_or_none():
             continue
 
+        raw_skill = item["skill"]
+        normalized_skill = normalize_skill(raw_skill) if item["subject"] == Subject.MATH.value else raw_skill
+
         q = Question(
             subject=item["subject"],
             domain=item["domain"],
-            skill=item["skill"],
+            skill=normalized_skill,
             subskill=item.get("subskill"),
             question_type=QuestionType.MULTIPLE_CHOICE.value,
             difficulty=item["difficulty"],
