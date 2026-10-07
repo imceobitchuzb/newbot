@@ -72,8 +72,7 @@ async def run_bot():
             return
 
         # Determine WebApp URL
-        webapp_url = os.getenv("TELEGRAM_WEBAPP_URL", "https://satmathbot.vercel.app")
-        # If running locally, tell users about browser mode or webapp
+        webapp_url = os.getenv("TELEGRAM_WEBAPP_URL", settings.TELEGRAM_WEBAPP_URL or "https://001214c36c6783.lhr.life")
         keyboard = {
             "inline_keyboard": [
                 [
@@ -84,8 +83,14 @@ async def run_bot():
                 ],
                 [
                     {
-                        "text": "📖 Desmos Lab & Shortcuts",
+                        "text": "📖 Desmos Lab (Embedded)",
                         "web_app": {"url": f"{webapp_url}/desmos"}
+                    }
+                ],
+                [
+                    {
+                        "text": "🌐 Open in Browser (Direct Link)",
+                        "url": webapp_url
                     }
                 ]
             ]
@@ -111,18 +116,24 @@ async def run_bot():
 
                         if text.startswith("/start"):
                             user_name = message.get("from", {}).get("first_name", "Friend")
-                            greeting = f"👋 Привет, {user_name}!\n\n" + WELCOME_TEXT
+                            greeting = (
+                                f"👋 Привет, {user_name}!\n\n"
+                                f"{WELCOME_TEXT}\n\n"
+                                f"🔗 Ссылка для браузера: {webapp_url}\n"
+                                f"📐 Desmos Lab: {webapp_url}/desmos"
+                            )
                             await send_message(client, token, chat_id, greeting, keyboard)
                         elif text.startswith("/help"):
                             help_text = (
-                                "📚 **Команды SAT MASTER:**\n"
+                                "📚 *Команды SAT MASTER:*\n"
                                 "/start — Запустить приложение и открыть меню\n"
                                 "/help — Список возможностей\n\n"
+                                f"Прямая ссылка: {webapp_url}\n"
                                 "Для начала тренировки нажмите кнопку 'Open SAT MASTER'!"
                             )
                             await send_message(client, token, chat_id, help_text, keyboard)
                         else:
-                            await send_message(client, token, chat_id, "Нажми кнопку ниже, чтобы открыть SAT MASTER 👇", keyboard)
+                            await send_message(client, token, chat_id, f"Нажми кнопку ниже или перейди по ссылке: {webapp_url} 👇", keyboard)
                 else:
                     await asyncio.sleep(2)
             except asyncio.CancelledError:

@@ -8,7 +8,8 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
-  Lightbulb,
+  Maximize2,
+  Minimize2,
   Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -21,6 +22,7 @@ interface DesmosPanelProps {
   techniqueSlug?: string | null;
   desmosUsed?: boolean;
   onToggleDesmosUsed?: (used: boolean) => void;
+  defaultOpen?: boolean;
 }
 
 export const DesmosPanel: React.FC<DesmosPanelProps> = ({
@@ -30,8 +32,11 @@ export const DesmosPanel: React.FC<DesmosPanelProps> = ({
   techniqueSlug,
   desmosUsed = true,
   onToggleDesmosUsed,
+  defaultOpen = true,
 }) => {
-  const [showCalculator, setShowCalculator] = useState(false);
+  // Desmos is embedded directly inside by default!
+  const [showCalculator, setShowCalculator] = useState(defaultOpen);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const badgeVariant =
     status === "RECOMMENDED"
@@ -47,10 +52,6 @@ export const DesmosPanel: React.FC<DesmosPanelProps> = ({
       ? "Desmos Allowed"
       : "No Desmos";
 
-  const openExternalCalculator = () => {
-    window.open("https://www.desmos.com/calculator", "_blank", "noopener,noreferrer");
-  };
-
   return (
     <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 space-y-3">
       {/* Header & Badges */}
@@ -58,7 +59,7 @@ export const DesmosPanel: React.FC<DesmosPanelProps> = ({
         <div className="flex items-center gap-2">
           <Calculator className="w-4 h-4 text-cyan-400" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-            Desmos Strategy
+            Desmos Digital SAT Engine
           </span>
           <Badge variant={badgeVariant} className="text-[10px] font-bold">
             {badgeText}
@@ -77,29 +78,31 @@ export const DesmosPanel: React.FC<DesmosPanelProps> = ({
         {reason}
       </p>
 
-      {/* Actions */}
+      {/* Controls Bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
         <div className="flex items-center gap-2">
           <Button
             size="sm"
             variant="outline"
-            onClick={openExternalCalculator}
-            className="text-xs border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 flex items-center gap-1.5 h-8"
+            onClick={() => setShowCalculator(!showCalculator)}
+            className="text-xs border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 flex items-center gap-1.5 h-8 font-semibold"
           >
             <Calculator className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Open Desmos Calculator</span>
-            <ExternalLink className="w-3 h-3 opacity-70" />
+            <span>{showCalculator ? "Hide Calculator" : "Show Calculator"}</span>
+            {showCalculator ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </Button>
 
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setShowCalculator(!showCalculator)}
-            className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1 h-8"
-          >
-            {showCalculator ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            <span>{showCalculator ? "Hide Embed" : "Embed View"}</span>
-          </Button>
+          {showCalculator && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1 h-8"
+            >
+              {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              <span>{isExpanded ? "Compact" : "Expand"}</span>
+            </Button>
+          )}
         </div>
 
         {onToggleDesmosUsed && (
@@ -113,25 +116,31 @@ export const DesmosPanel: React.FC<DesmosPanelProps> = ({
             }`}
           >
             {desmosUsed ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-            <span>{desmosUsed ? "Try Without Desmos" : "Manual Mode Active"}</span>
+            <span>{desmosUsed ? "Desmos Active" : "Manual Mode"}</span>
           </button>
         )}
       </div>
 
-      {/* Embedded Calculator iFrame (safe toggle) */}
+      {/* Official Embedded Calculator — Directly INSIDE the app */}
       {showCalculator && (
-        <div className="mt-2 pt-2 border-t border-slate-800/80">
-          <div className="w-full h-80 rounded-lg overflow-hidden border border-slate-800 bg-slate-950 relative">
+        <div className="mt-2 pt-2 border-t border-slate-800/80 space-y-1.5">
+          <div
+            className={`w-full rounded-xl overflow-hidden border border-cyan-500/30 bg-slate-950 relative transition-all duration-200 ${
+              isExpanded ? "h-[500px]" : "h-80 sm:h-96"
+            }`}
+          >
             <iframe
               src="https://www.desmos.com/calculator"
-              title="Desmos Graphing Calculator"
+              title="Official Desmos Digital SAT Calculator"
               className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin allow-popups"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              loading="lazy"
             />
           </div>
-          <p className="text-[10px] text-slate-500 mt-1 text-center">
-            Official Desmos Graphing Calculator • Same tool embedded in Bluebook Digital SAT
-          </p>
+          <div className="flex items-center justify-between text-[10px] text-slate-500 px-1">
+            <span>Official Embedded Calculator (Same engine as College Board Bluebook)</span>
+            <span className="text-cyan-400/80 font-mono">Real-time Graphing</span>
+          </div>
         </div>
       )}
     </div>

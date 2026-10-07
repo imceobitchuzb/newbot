@@ -284,6 +284,34 @@ export default function TechniqueDetailPage() {
           </div>
         )}
 
+        {/* Live Embedded Desmos Workspace on the Technique Page */}
+        <Card className="p-4 bg-slate-900/90 border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calculator className="w-4 h-4 text-cyan-400" />
+              <h2 className="text-xs uppercase tracking-wider font-bold text-slate-200">
+                Interactive Desmos Workspace
+              </h2>
+            </div>
+            <span className="text-[10px] text-cyan-400 bg-cyan-950/40 border border-cyan-500/30 px-2 py-0.5 rounded font-medium">
+              Try This Technique Here
+            </span>
+          </div>
+
+          <div className="w-full h-80 sm:h-96 rounded-xl overflow-hidden border border-cyan-500/30 bg-slate-950 relative">
+            <iframe
+              src="https://www.desmos.com/calculator"
+              title="Interactive Desmos Calculator"
+              className="w-full h-full border-0"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              loading="lazy"
+            />
+          </div>
+          <p className="text-[11px] text-slate-400 text-center">
+            Follow the steps above and test them live in the calculator!
+          </p>
+        </Card>
+
         {/* Bottom CTA */}
         <div className="pt-4 flex justify-center">
           <Button
