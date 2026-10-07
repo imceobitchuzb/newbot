@@ -19,6 +19,7 @@ import {
   Trophy,
   XCircle,
   Zap,
+  Bot,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/Card";
@@ -294,9 +295,18 @@ function DesmosPracticeContent() {
         <Card className="p-4 sm:p-5 bg-slate-900/90 border-slate-800 space-y-4">
           <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
             <span className="font-semibold text-slate-300">{activeQuestion.domain}</span>
-            <Badge variant="outline" className="text-[10px] uppercase">
-              {activeQuestion.difficulty}
-            </Badge>
+            <div className="flex items-center gap-1.5">
+              <Link
+                href={`/tutor?context=DESMOS&id=${activeQuestion.technique_slug || activeQuestion.id}`}
+                className="inline-flex items-center gap-1 text-[10px] font-semibold text-cyan-400 hover:text-cyan-300 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-500/30 transition-colors"
+              >
+                <Bot className="w-3 h-3" />
+                <span>Ask Tutor</span>
+              </Link>
+              <Badge variant="outline" className="text-[10px] uppercase">
+                {activeQuestion.difficulty}
+              </Badge>
+            </div>
           </div>
 
           {/* Question Text */}

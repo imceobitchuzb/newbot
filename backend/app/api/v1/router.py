@@ -8,6 +8,7 @@ from backend.app.api.v1.endpoints import (
     math,
     mistakes,
     questions,
+    tutor,
     users,
 )
 
@@ -23,6 +24,7 @@ api_router.include_router(math.router, prefix="/math", tags=["Math"])
 api_router.include_router(mistakes.router, prefix="/mistakes", tags=["Mistakes"])
 api_router.include_router(adaptive.router)
 api_router.include_router(desmos.router)
+api_router.include_router(tutor.router, prefix="/tutor", tags=["Tutor"])
 
 
 

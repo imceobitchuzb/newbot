@@ -21,6 +21,7 @@ import {
   Trophy,
   XCircle,
   Zap,
+  Bot,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
@@ -319,8 +320,17 @@ export default function AdaptivePracticePage() {
 
         {/* Question Text Box */}
         <Card className="p-4 bg-slate-900/90 border-slate-800 space-y-3">
-          <div className="text-xs text-slate-400 font-medium">
-            {currentQ.domain}
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-slate-400 font-medium">
+              {currentQ.domain}
+            </div>
+            <Link
+              href={`/tutor?context=QUESTION&id=${currentQ.id}`}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-400 hover:text-cyan-300 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-500/30 transition-colors"
+            >
+              <Bot className="w-3 h-3" />
+              <span>Ask Tutor</span>
+            </Link>
           </div>
           <div className="text-sm text-slate-100 leading-relaxed">
             <MathText text={currentQ.question_text} />

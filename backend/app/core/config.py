@@ -27,8 +27,16 @@ class Settings(BaseSettings):
     CORS_ORIGINS: Union[str, List[str]] = "http://localhost:3000,http://127.0.0.1:3000"
 
     # AI Tutor
+    AI_PROVIDER: str = "openai"
     AI_API_KEY: str = ""
     AI_MODEL: str = "gpt-4o-mini"
+    AI_BASE_URL: str = ""
+    AI_MAX_TOKENS: int = 1500
+    AI_TEMPERATURE: float = 0.3
+    TUTOR_MAX_MESSAGES_PER_MINUTE: int = 10
+    TUTOR_MAX_MESSAGES_PER_HOUR: int = 100
+    TUTOR_MAX_MESSAGE_LENGTH: int = 4000
+    TUTOR_SLIDING_WINDOW_SIZE: int = 12
 
     @field_validator("CORS_ORIGINS", mode="after")
     @classmethod

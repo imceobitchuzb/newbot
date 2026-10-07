@@ -15,6 +15,7 @@ import {
   Sparkles,
   Trophy,
   RefreshCw,
+  Bot,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/Card";
@@ -346,8 +347,14 @@ export default function MistakeDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Back to Mistakes button */}
-            <div className="pt-2 flex gap-2">
+            {/* Back to Mistakes and Explain with AI buttons */}
+            <div className="pt-2 flex flex-col sm:flex-row gap-2">
+              <Link href={`/tutor?context=MISTAKE&id=${mistake.id}`} className="flex-1">
+                <Button className="w-full text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/20">
+                  <Bot className="w-3.5 h-3.5" />
+                  <span>Explain My Mistake with AI</span>
+                </Button>
+              </Link>
               <Link href="/mistakes" className="flex-1">
                 <Button variant="outline" className="w-full text-xs">
                   Back to Mistake Book

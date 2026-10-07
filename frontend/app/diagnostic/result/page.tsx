@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Sparkles,
   TrendingUp,
+  Bot,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { AppShell } from "@/components/layout/AppShell";
@@ -317,8 +318,14 @@ function DiagnosticResultContent() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <Link href="/tutor?context=DIAGNOSTIC" className="flex-1">
+            <Button className="w-full justify-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold shadow-md shadow-cyan-500/20" size="lg">
+              <Bot className="w-4 h-4 text-slate-950" />
+              <span>Ask AI to Explain My Results</span>
+            </Button>
+          </Link>
           <Link href="/practice" className="flex-1">
-            <Button variant="primary" size="lg" className="w-full justify-center gap-2">
+            <Button variant="outline" size="lg" className="w-full justify-center gap-2">
               <span>Start Targeted Practice</span>
               <ArrowRight className="w-4 h-4" />
             </Button>

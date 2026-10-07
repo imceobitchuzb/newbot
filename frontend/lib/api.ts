@@ -29,6 +29,15 @@ import {
   DesmosTechnique,
   DesmosTechniqueDetail,
 } from "@/types/desmos";
+import {
+  TutorConversationDetail,
+  TutorConversationSummary,
+  TutorCreateConversationRequest,
+  TutorExplainRequest,
+  TutorExplainResponse,
+  TutorMessage,
+  TutorSendMessageRequest,
+} from "@/types/tutor";
 import { AttemptResult, AttemptSubmitRequest, Question } from "@/types/question";
 import { AuthResponse, User } from "@/types/user";
 
@@ -589,6 +598,92 @@ class ApiClient {
    */
   async getDesmosAnalytics(): Promise<DesmosAnalytics> {
     return this.request<DesmosAnalytics>("/api/v1/desmos/analytics");
+  }
+
+  // ==================== AI SAT TUTOR ====================
+
+  /**
+   * Create a new tutor conversation
+   */
+  async createTutorConversation(
+    data: TutorCreateConversationRequest
+  ): Promise<TutorConversationDetail> {
+    return this.request<TutorConversationDetail>("/api/v1/tutor/conversations", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * List all user's conversations
+   */
+  async getTutorConversations(): Promise<TutorConversationSummary[]> {
+    return this.request<TutorConversationSummary[]>("/api/v1/tutor/conversations");
+  }
+
+  /**
+   * Get conversation detail by ID
+   */
+  async getTutorConversation(conversationId: string): Promise<TutorConversationDetail> {
+    return this.request<TutorConversationDetail>(`/api/v1/tutor/conversations/${conversationId}`);
+  }
+
+  /**
+   * Delete conversation by ID
+   */
+  async deleteTutorConversation(conversationId: string): Promise<void> {
+    await this.request<void>(`/api/v1/tutor/conversations/${conversationId}`, {
+      method: "DELETE",
+    });
+  }
+
+  /**
+   * Send a message to AI Tutor
+   */
+  async sendTutorMessage(
+    conversationId: string,
+    data: TutorSendMessageRequest
+  ): Promise<TutorMessage> {
+    return this.request<TutorMessage>(
+      `/api/v1/tutor/conversations/${conversationId}/messages`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    );
+  }
+
+  /**
+   * One-shot explanation/hint request
+   */
+  async explainWithTutor(data: TutorExplainRequest): Promise<TutorExplainResponse> {
+    return this.request<TutorExplainResponse>("/api/v1/tutor/explain", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Get question context
+   */
+  async getTutorQuestionContext(questionId: string, mode: string = "HINT"): Promise<any> {
+    return this.request<any>(
+      `/api/v1/tutor/context/question/${questionId}?mode=${encodeURIComponent(mode)}`
+    );
+  }
+
+  /**
+   * Get mistake context
+   */
+  async getTutorMistakeContext(mistakeId: string): Promise<any> {
+    return this.request<any>(`/api/v1/tutor/context/mistake/${mistakeId}`);
+  }
+
+  /**
+   * Get skill context
+   */
+  async getTutorSkillContext(skill: string): Promise<any> {
+    return this.request<any>(`/api/v1/tutor/context/skill/${encodeURIComponent(skill)}`);
   }
 }
 

@@ -512,9 +512,39 @@ CREATE TABLE desmos_practice_questions (
 CREATE INDEX ix_desmos_practice_questions_session_id ON desmos_practice_questions(session_id);
 CREATE INDEX ix_desmos_practice_questions_question_id ON desmos_practice_questions(question_id);
 CREATE INDEX ix_desmos_practice_questions_session_order ON desmos_practice_questions(session_id, order_index);
+### 3.9. AI SAT Tutor (Implemented in Migration 009)
+```sql
+CREATE TABLE tutor_conversations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255),
+    context_type VARCHAR(64) DEFAULT 'GENERAL' NOT NULL, -- 'GENERAL', 'QUESTION', 'MISTAKE', 'SKILL', 'DIAGNOSTIC', 'DESMOS', 'ADAPTIVE'
+    context_id VARCHAR(128),
+    subject VARCHAR(32), -- 'MATH', 'READING_WRITING'
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX ix_tutor_conversations_user_id ON tutor_conversations(user_id);
+CREATE INDEX ix_tutor_conversations_context_type ON tutor_conversations(context_type);
+
+CREATE TABLE tutor_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id UUID NOT NULL REFERENCES tutor_conversations(id) ON DELETE CASCADE,
+    role VARCHAR(32) NOT NULL, -- 'USER', 'ASSISTANT', 'SYSTEM'
+    content TEXT NOT NULL,
+    mode VARCHAR(32), -- 'HINT', 'EXPLANATION', 'SOLUTION', 'CONCEPT', 'DESMOS_HELP'
+    token_count INT,
+    model VARCHAR(64),
+    actions JSON, -- Array of structured action items
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX ix_tutor_messages_conversation_id ON tutor_messages(conversation_id);
+CREATE INDEX ix_tutor_messages_created_at ON tutor_messages(created_at);
 ```
 
-### 3.9. Gamification, Daily Challenges & Streaks
+### 3.10. Gamification, Daily Challenges & Streaks
 ```sql
 CREATE TABLE daily_challenges (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

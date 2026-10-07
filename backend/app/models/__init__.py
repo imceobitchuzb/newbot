@@ -16,6 +16,10 @@ from backend.app.models.desmos import (
     DesmosTechnique,
     QuestionDesmosTechnique,
 )
+from backend.app.models.tutor import (
+    TutorConversation,
+    TutorMessage,
+)
 from backend.app.models.enums import (
     AdaptiveSessionStatus,
     AdaptiveSkillStatus,
@@ -31,10 +35,15 @@ from backend.app.models.enums import (
     MistakeType,
     QuestionStatus,
     QuestionType,
+    QuickPromptType,
     ReadingWritingDomain,
     RecommendationType,
     SkillMasteryLevel,
     Subject,
+    TutorActionType,
+    TutorContextType,
+    TutorMessageRole,
+    TutorMode,
 )
 from backend.app.models.math_practice import (
     MathPracticeQuestion,
@@ -73,6 +82,8 @@ __all__ = [
     "QuestionDesmosTechnique",
     "DesmosPracticeSession",
     "DesmosPracticeQuestion",
+    "TutorConversation",
+    "TutorMessage",
     "Subject",
     "MathDomain",
     "ReadingWritingDomain",
@@ -91,6 +102,11 @@ __all__ = [
     "AdaptiveSessionStatus",
     "DesmosTechniqueType",
     "DesmosSessionStatus",
+    "TutorContextType",
+    "TutorMessageRole",
+    "TutorMode",
+    "TutorActionType",
+    "QuickPromptType",
 ]
 
 

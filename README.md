@@ -331,6 +331,43 @@ Visit `http://localhost:3000/practice/demo` to try the Question Engine directly:
 - `/desmos/practice`: Focused Desmos practice runner with timer, Desmos recommendations panel, collapsible calculator frame, KaTeX equations, instant answer feedback, Mistake Book sync alerts, and session completion summaries.
 - Entry points also placed directly on the main Dashboard tools section and the `/math` learning hub.
 
+---
+
+## 13. Real AI SAT Tutor (Phase 10)
+
+### 13.1. Architecture & Provider Abstraction
+- **Decoupled Provider Layer**: `TutorService` $\rightarrow$ `BaseAIProvider` $\rightarrow$ `OpenAIProvider`. Easily swappable without altering tutor business logic or database layers.
+- **Controlled Error Handling**: If no API key is configured or the external LLM is offline, returns a controlled `503 Service Unavailable` (`"AI Tutor is not configured"`) without stacktraces or fake hallucinated responses.
+- **Strict Anti-Leakage Protection**:
+  - In `HINT` mode: The correct answer key, option letter, and official explanation are **never** provided to the prompt.
+  - In `EXPLANATION` / `SOLUTION` mode: Provided only after user submission.
+  - In `DESMOS_HELP` mode: Guides step-by-step calculator input without revealing solution values.
+- **Context Builder**: Compact user performance profiles (target score, diagnostic baseline, weak domains, active mistakes count) and selective question/mistake context.
+- **Security & Prompt Injection Guardrails**: Hardened system prompt rejecting attempts to disclose directives or bypass SAT prep constraints.
+- **Sliding-Window Conversation Memory**: Preserves full history in SQLite/PostgreSQL while feeding only the last 12 messages to the model for cost control.
+- **Deterministic Rate Limiting**: Max 10 messages/minute and 100 messages/hour per user enforced backend-side (HTTP 429).
+
+### 13.2. AI Tutor API Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/tutor/conversations` | Create a persistent tutor conversation with context |
+| `GET` | `/api/v1/tutor/conversations` | List user's conversations with message counts and previews |
+| `GET` | `/api/v1/tutor/conversations/{id}` | Retrieve full conversation message history |
+| `DELETE` | `/api/v1/tutor/conversations/{id}` | Delete conversation and cascade delete messages |
+| `POST` | `/api/v1/tutor/conversations/{id}/messages` | Send message, execute rate limit, call AI, return structured response |
+| `POST` | `/api/v1/tutor/explain` | One-shot explanation/hint without creating full conversation |
+| `GET` | `/api/v1/tutor/context/question/{qid}` | Preview question context with anti-leakage protection |
+| `GET` | `/api/v1/tutor/context/mistake/{mid}` | Preview mistake context for remediation |
+| `GET` | `/api/v1/tutor/context/skill/{skill}` | Preview skill context and user mastery |
+
+### 13.3. Frontend Views & Cross-App Integrations
+- `/tutor`: Mobile-first chat interface with conversation switcher, quick action chips ([Weakest Skill], [Review Mistakes], [Desmos Guide], [1400+ Plan]), mode selector pills (`HINT`, `EXPLANATION`, `CONCEPT`, `DESMOS_HELP`), KaTeX formula rendering, structured action cards (`PRACTICE_SKILL`, `REVIEW_MISTAKE`, `OPEN_DESMOS`), and temporary outage alert banners.
+- `/mistakes/[id]`: "Explain My Mistake with AI" button directly linking to tutor with mistake remediation context.
+- `/math/adaptive`: "Ask Tutor" link in the adaptive question card header.
+- `/desmos/practice`: "Ask Tutor" link with Desmos technique context.
+- `/diagnostic/result`: "Ask AI to Explain My Results" primary CTA.
+
+
 
 
 
