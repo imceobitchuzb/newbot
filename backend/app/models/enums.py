@@ -85,4 +85,28 @@ class MistakeType(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class AdaptiveSkillStatus(str, Enum):
+    NOT_STARTED = "NOT_STARTED"
+    LEARNING = "LEARNING"
+    PRACTICING = "PRACTICING"
+    STRONG = "STRONG"
+    MASTERED = "MASTERED"
+
+
+class RecommendationType(str, Enum):
+    MISTAKE_REVIEW = "MISTAKE_REVIEW"
+    WEAK_SKILL = "WEAK_SKILL"
+    NEW_SKILL = "NEW_SKILL"
+    DIFFICULTY_UP = "DIFFICULTY_UP"
+    DIFFICULTY_DOWN = "DIFFICULTY_DOWN"
+    MAINTENANCE = "MAINTENANCE"
+
+
+class AdaptiveSessionStatus(str, Enum):
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    ABANDONED = "ABANDONED"
+
+
+
 

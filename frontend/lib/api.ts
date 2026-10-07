@@ -6,6 +6,14 @@ import {
   DiagnosticSession,
 } from "@/types/diagnostic";
 import {
+  AdaptiveAnalyticsResponse,
+  AdaptiveAnswerRequest,
+  AdaptiveAnswerResponse,
+  AdaptiveNextQuestionResponse,
+  AdaptiveSessionResponse,
+  AdaptiveSessionStartRequest,
+} from "@/types/adaptive";
+import {
   MistakeAnalyticsResponse,
   MistakeClassifyRequest,
   MistakeEntryItem,
@@ -400,6 +408,75 @@ class ApiClient {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  }
+
+  // ==================== ADAPTIVE LEARNING ENGINE ====================
+
+  /**
+   * Get standalone next question recommendation
+   */
+  async getAdaptiveNextQuestion(subject: string = "MATH"): Promise<AdaptiveNextQuestionResponse> {
+    return this.request<AdaptiveNextQuestionResponse>(
+      `/api/v1/adaptive/next?subject=${encodeURIComponent(subject)}`
+    );
+  }
+
+  /**
+   * Get comprehensive skill mastery analytics and curriculum trajectory
+   */
+  async getAdaptiveAnalytics(subject: string = "MATH"): Promise<AdaptiveAnalyticsResponse> {
+    return this.request<AdaptiveAnalyticsResponse>(
+      `/api/v1/adaptive/analytics?subject=${encodeURIComponent(subject)}`
+    );
+  }
+
+  /**
+   * Start or resume an adaptive practice session
+   */
+  async startAdaptiveSession(
+    data?: AdaptiveSessionStartRequest
+  ): Promise<AdaptiveSessionResponse> {
+    return this.request<AdaptiveSessionResponse>("/api/v1/adaptive/session", {
+      method: "POST",
+      body: JSON.stringify(data || {}),
+    });
+  }
+
+  /**
+   * Get current active adaptive session
+   */
+  async getCurrentAdaptiveSession(subject: string = "MATH"): Promise<AdaptiveSessionResponse | null> {
+    try {
+      return await this.request<AdaptiveSessionResponse | null>(
+        `/api/v1/adaptive/session/current?subject=${encodeURIComponent(subject)}`
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get adaptive session by ID
+   */
+  async getAdaptiveSession(sessionId: string): Promise<AdaptiveSessionResponse> {
+    return this.request<AdaptiveSessionResponse>(`/api/v1/adaptive/session/${sessionId}`);
+  }
+
+  /**
+   * Submit answer for a question in adaptive session
+   */
+  async submitAdaptiveAnswer(
+    sessionId: string,
+    questionId: string,
+    payload: AdaptiveAnswerRequest
+  ): Promise<AdaptiveAnswerResponse> {
+    return this.request<AdaptiveAnswerResponse>(
+      `/api/v1/adaptive/session/${sessionId}/questions/${questionId}/answer`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
   }
 }
 

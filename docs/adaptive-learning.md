@@ -187,4 +187,62 @@ Reviews are scheduled deterministically using exponential interval spacing based
 - Retries create **new** `QuestionAttempt` rows linked to the user and question.
 - Historical attempts are strictly preserved and never mutated or overwritten.
 
+---
+
+## 9. Phase 8 Adaptive Learning Engine (Deterministic & Explainable)
+
+### 9.1. Design Philosophy
+Phase 8 implements an explainable, deterministic recommendation engine without black-box ML or uncalibrated IRT parameters. All recommendations derive from verifiable database telemetry:
+1. Every recommendation includes a clear, pedagogical "Why this question?" rationale.
+2. Deterministic execution: identical student telemetry states produce identical question selections.
+3. Zero-failure guarantee: the question selector employs a 5-tier fallback cascade ensuring a question is always returned.
+
+### 9.2. Telemetry & Mastery Mathematical Formulation
+For each canonical SAT skill $k$ with $n$ total attempts:
+
+1. **Confidence Score**:
+   $$\text{Confidence}(n) = \min\left(\frac{n}{10.0}, 1.0\right)$$
+   Confidence reaches $1.0$ once 10 attempts have been recorded for the skill.
+
+2. **Recent Accuracy**:
+   $$\text{RecentAccuracy} = \frac{1}{|W|} \sum_{i \in W} y_i, \quad W = \text{last } \min(n, 10) \text{ attempts}$$
+
+3. **Mastery Score ($0.0 \to 1.0$)**:
+   $$\text{Mastery} = 0.4 \cdot \text{OverallAccuracy} + 0.4 \cdot \text{RecentAccuracy} + 0.2 \cdot \text{Confidence} - \text{Penalty}$$
+   - Active mistake penalty: $-0.15$ if an unresolved mistake exists in the skill.
+   - In-review mistake penalty: $-0.05$ if an in-review mistake exists.
+   - Clamped to $[0.0, 1.0]$.
+
+4. **Skill Status Classification**:
+   - `NOT_STARTED`: $n = 0$
+   - `LEARNING`: $\text{Mastery} < 0.60$
+   - `PRACTICING`: $0.60 \le \text{Mastery} < 0.80$
+   - `STRONG`: $0.80 \le \text{Mastery} < 0.90$
+   - `MASTERED`: $\text{Mastery} \ge 0.90$ **AND** $n \ge 10$ **AND** $\text{RecentAccuracy} \ge 0.85$ (capped at `STRONG` if criteria not fully met).
+
+### 9.3. Adaptive Difficulty Transitions
+Dynamic difficulty follows a rolling window of recent session attempts ($N = 5$):
+- **Step Up** (`EASY` $\rightarrow$ `MEDIUM` $\rightarrow$ `HARD`): Rolling accuracy $\ge 80\%$.
+- **Step Down** (`HARD` $\rightarrow$ `MEDIUM` $\rightarrow$ `EASY`): Rolling accuracy $\le 40\%$.
+- **Maintain**: Rolling accuracy between $41\%$ and $79\%$.
+- **Strict Constraint**: Single-tier steps only; double jumps (`EASY` $\leftrightarrow$ `HARD`) are strictly forbidden.
+
+### 9.4. Deterministic Recommendation Hierarchy
+When selecting the next target topic/skill:
+1. `MISTAKE_REVIEW`: Active mistake or overdue spaced review in the domain.
+2. `WEAK_SKILL`: Lowest mastery skill among attempted skills ($< 0.80$).
+3. `NEW_SKILL`: Unattempted skill prioritizing diagnostic weak domains.
+4. `DIFFICULTY_UP`: Session rolling accuracy $\ge 80\%$ triggering escalation.
+5. `DIFFICULTY_DOWN`: Session rolling accuracy $\le 40\%$ triggering de-escalation.
+6. `MAINTENANCE`: Retention practice on strong skills.
+
+### 9.5. Hierarchical Question Fallback Cascade
+To honor the 20-attempt cooldown while preventing empty question sets:
+- **Tier 1**: Match `target_domain` + `target_skill` + `target_difficulty` (excluding cooldown).
+- **Tier 2**: Match `target_domain` + `target_difficulty` (excluding cooldown).
+- **Tier 3**: Match `target_domain` + any difficulty (excluding cooldown).
+- **Tier 4**: Match `subject` + any difficulty (excluding cooldown).
+- **Tier 5**: Any question in the subject pool (oldest attempt first if all are in cooldown).
+
+
 

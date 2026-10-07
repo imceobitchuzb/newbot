@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 import { useAuth } from "@/features/auth/AuthContext";
 import { MathAnalyticsResponse, SkillMastery } from "@/types/math";
+import { AdaptiveAnalyticsResponse, SkillMasteryItem } from "@/types/adaptive";
 
 const DOMAIN_SLUGS: Record<string, string> = {
   ALGEBRA: "algebra",
@@ -45,6 +46,11 @@ export default function MathPage() {
     queryFn: () => api.getMathAnalytics(),
   });
 
+  const { data: adaptiveAnalytics } = useQuery<AdaptiveAnalyticsResponse>({
+    queryKey: ["adaptive-analytics"],
+    queryFn: () => api.getAdaptiveAnalytics("MATH"),
+  });
+
   const getMasteryBadge = (level: SkillMastery) => {
     switch (level) {
       case "STRONG":
@@ -53,6 +59,21 @@ export default function MathPage() {
         return { label: "Practicing", bg: "bg-blue-500/15", text: "text-blue-400", border: "border-blue-500/30" };
       case "LEARNING":
         return { label: "Learning", bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30" };
+      default:
+        return { label: "Not Started", bg: "bg-slate-800", text: "text-slate-400", border: "border-slate-700" };
+    }
+  };
+
+  const getAdaptiveStatusBadge = (status: string) => {
+    switch (status) {
+      case "MASTERED":
+        return { label: "Mastered", bg: "bg-emerald-500/15", text: "text-emerald-400", border: "border-emerald-500/30" };
+      case "STRONG":
+        return { label: "Strong", bg: "bg-blue-500/15", text: "text-blue-400", border: "border-blue-500/30" };
+      case "PRACTICING":
+        return { label: "Practicing", bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30" };
+      case "LEARNING":
+        return { label: "Learning", bg: "bg-rose-500/15", text: "text-rose-400", border: "border-rose-500/30" };
       default:
         return { label: "Not Started", bg: "bg-slate-800", text: "text-slate-400", border: "border-slate-700" };
     }
@@ -114,7 +135,16 @@ export default function MathPage() {
           </div>
         </Card>
 
-        {/* Action Hero Button */}
+        {/* Primary Action: Continue Adaptive Practice */}
+        <Button
+          onClick={() => router.push("/math/adaptive")}
+          className="w-full h-12 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold flex items-center justify-center gap-2 rounded-xl shadow-lg shadow-cyan-500/25 transition-all"
+        >
+          <Sparkles className="w-5 h-5 text-cyan-200" />
+          <span>Continue Adaptive Practice</span>
+        </Button>
+
+        {/* Action Hero Buttons */}
         <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={() => router.push("/math/practice")}
@@ -212,6 +242,81 @@ export default function MathPage() {
               </div>
               <div className="text-[11px] text-slate-400">Overall Accuracy</div>
             </div>
+          </Card>
+        </div>
+
+        {/* Your Learning Path (Adaptive Engine) */}
+        <div className="space-y-3 pt-1">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xs uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Your Adaptive Learning Path</span>
+            </h2>
+            <Link
+              href="/math/adaptive"
+              className="text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-0.5"
+            >
+              <span>Adaptive Drill</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <Card className="p-3.5 bg-slate-900/90 border-slate-800 space-y-2.5">
+            {adaptiveAnalytics?.skills ? (
+              <div className="space-y-2">
+                {adaptiveAnalytics.skills
+                  .filter((s) => s.attempts > 0 || s.skill === adaptiveAnalytics.recommended_skill)
+                  .slice(0, 5)
+                  .map((skillItem) => {
+                    const badge = getAdaptiveStatusBadge(skillItem.status);
+                    const masteryPct = Math.round(skillItem.mastery_score * 100);
+
+                    return (
+                      <div
+                        key={skillItem.skill}
+                        className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/80 flex items-center justify-between gap-3"
+                      >
+                        <div className="space-y-0.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-200 truncate">
+                              {skillItem.skill}
+                            </span>
+                            <span
+                              className={`text-[9px] px-1.5 py-0.2 rounded border font-semibold shrink-0 ${badge.bg} ${badge.text} ${badge.border}`}
+                            >
+                              {badge.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                            <span>Mastery: <strong className="text-cyan-400">{masteryPct}%</strong></span>
+                            <span>•</span>
+                            <span>{skillItem.attempts} attempts</span>
+                            {skillItem.attempts > 0 && (
+                              <>
+                                <span>•</span>
+                                <span>{Math.round(skillItem.accuracy * 100)}% accuracy</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => router.push("/math/adaptive")}
+                          className="text-xs text-cyan-400 hover:text-cyan-300 px-2 py-1 h-7 shrink-0"
+                        >
+                          Train
+                        </Button>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <div className="py-4 text-center text-xs text-slate-500">
+                Calibrating your learning trajectory...
+              </div>
+            )}
           </Card>
         </div>
 

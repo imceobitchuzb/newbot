@@ -377,9 +377,69 @@ CREATE TABLE full_test_attempts (
     started_at TIMESTAMPTZ DEFAULT NOW(),
     completed_at TIMESTAMPTZ
 );
+### 3.7. Adaptive Learning Engine (Implemented in Migration 007)
+```sql
+CREATE TABLE adaptive_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subject VARCHAR(32) DEFAULT 'MATH' NOT NULL, -- 'MATH', 'READING_WRITING'
+    current_difficulty VARCHAR(32) DEFAULT 'MEDIUM' NOT NULL, -- 'EASY', 'MEDIUM', 'HARD'
+    rolling_accuracy FLOAT DEFAULT 0.0 NOT NULL,
+    total_adaptive_attempts INT DEFAULT 0 NOT NULL,
+    correct_adaptive_attempts INT DEFAULT 0 NOT NULL,
+    last_recommended_domain VARCHAR(64),
+    last_recommended_skill VARCHAR(128),
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    CONSTRAINT uq_adaptive_profile_user_subject UNIQUE (user_id, subject)
+);
+
+CREATE INDEX ix_adaptive_profiles_user_id ON adaptive_profiles(user_id);
+CREATE INDEX ix_adaptive_profiles_subject ON adaptive_profiles(subject);
+
+CREATE TABLE adaptive_practice_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subject VARCHAR(32) DEFAULT 'MATH' NOT NULL,
+    status VARCHAR(32) DEFAULT 'IN_PROGRESS' NOT NULL, -- 'IN_PROGRESS', 'COMPLETED', 'ABANDONED'
+    target_count INT DEFAULT 10 NOT NULL,
+    completed_count INT DEFAULT 0 NOT NULL,
+    correct_count INT DEFAULT 0 NOT NULL,
+    current_difficulty VARCHAR(32) DEFAULT 'MEDIUM' NOT NULL,
+    started_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX ix_adaptive_practice_sessions_user_id ON adaptive_practice_sessions(user_id);
+CREATE INDEX ix_adaptive_practice_sessions_status ON adaptive_practice_sessions(status);
+CREATE INDEX ix_adaptive_practice_sessions_user_status ON adaptive_practice_sessions(user_id, status);
+
+CREATE TABLE adaptive_practice_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES adaptive_practice_sessions(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    order_index INT NOT NULL,
+    difficulty VARCHAR(32) NOT NULL,
+    recommendation_type VARCHAR(64) DEFAULT 'MAINTENANCE' NOT NULL,
+    recommendation_reason TEXT NOT NULL,
+    selected_option_id UUID REFERENCES question_options(id) ON DELETE SET NULL,
+    is_correct BOOLEAN,
+    time_spent_seconds INT,
+    attempt_id UUID REFERENCES question_attempts(id) ON DELETE SET NULL,
+    answered_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    CONSTRAINT uq_adaptive_session_order UNIQUE (session_id, order_index),
+    CONSTRAINT uq_adaptive_session_question UNIQUE (session_id, question_id)
+);
+
+CREATE INDEX ix_adaptive_practice_questions_session_id ON adaptive_practice_questions(session_id);
+CREATE INDEX ix_adaptive_practice_questions_question_id ON adaptive_practice_questions(question_id);
+CREATE INDEX ix_adaptive_practice_questions_session_order ON adaptive_practice_questions(session_id, order_index);
 ```
 
-### 3.7. Gamification, Daily Challenges & Streaks
+### 3.8. Gamification, Daily Challenges & Streaks
 ```sql
 CREATE TABLE daily_challenges (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

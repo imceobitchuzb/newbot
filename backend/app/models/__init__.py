@@ -1,3 +1,8 @@
+from backend.app.models.adaptive import (
+    AdaptivePracticeQuestion,
+    AdaptivePracticeSession,
+    AdaptiveProfile,
+)
 from backend.app.models.base import Base, TimestampMixin
 from backend.app.models.diagnostic import (
     DiagnosticModule,
@@ -6,6 +11,8 @@ from backend.app.models.diagnostic import (
     DiagnosticSession,
 )
 from backend.app.models.enums import (
+    AdaptiveSessionStatus,
+    AdaptiveSkillStatus,
     DiagnosticModuleStatus,
     DiagnosticStatus,
     Difficulty,
@@ -17,6 +24,7 @@ from backend.app.models.enums import (
     QuestionStatus,
     QuestionType,
     ReadingWritingDomain,
+    RecommendationType,
     SkillMasteryLevel,
     Subject,
 )
@@ -50,6 +58,9 @@ __all__ = [
     "MathPracticeSession",
     "MathPracticeQuestion",
     "MistakeBookEntry",
+    "AdaptiveProfile",
+    "AdaptivePracticeSession",
+    "AdaptivePracticeQuestion",
     "Subject",
     "MathDomain",
     "ReadingWritingDomain",
@@ -63,6 +74,9 @@ __all__ = [
     "SkillMasteryLevel",
     "MistakeStatus",
     "MistakeType",
+    "AdaptiveSkillStatus",
+    "RecommendationType",
+    "AdaptiveSessionStatus",
 ]
 
 

@@ -125,6 +125,14 @@ def get_skills_for_domain(domain: str) -> List[str]:
     return []
 
 
+def get_all_canonical_skills() -> List[str]:
+    """Return all canonical skills across all domains."""
+    skills: List[str] = []
+    for domain_data in CANONICAL_MATH_DOMAINS.values():
+        skills.extend(domain_data["skills"])
+    return skills
+
+
 def get_domain_for_skill(skill: str) -> Optional[str]:
     """Find the domain containing the specified skill."""
     norm = normalize_skill(skill).lower()

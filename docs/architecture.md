@@ -152,7 +152,7 @@ All endpoints are versioned under `/api/v1/`:
 | `/api/v1/users/me` | Current user profile, target score, baseline, preferences |
 | `/api/v1/dashboard` | Aggregated dashboard: current estimate, streak, today's plan, weak topics |
 | `/api/v1/questions` | Filtered questions, random selection, individual question lookup, and attempt submission (`POST /api/v1/questions/{id}/attempt`) |
-| `/api/v1/adaptive/next` | Adaptive question recommendation engine |
+| `/api/v1/adaptive` | Adaptive practice sessions: `GET /next`, `GET /analytics`, `POST /session`, `GET /session/current`, `GET /session/{id}`, `POST /session/{id}/questions/{qid}/answer` |
 | `/api/v1/mistakes` | Mistake book querying, mistake categorization, retry queue |
 | `/api/v1/lessons` | Topic lessons, concept walkthroughs, SAT shortcuts |
 | `/api/v1/desmos` | Desmos interactive guides, shortcuts, and embedded graphs |

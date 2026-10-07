@@ -260,5 +260,47 @@ Visit `http://localhost:3000/practice/demo` to try the Question Engine directly:
 - `/mistakes`: Overview dashboard with error telemetry chips, priority remediation banner, filter tabs, and KaTeX math snippets.
 - `/mistakes/[id]`: Interactive remediation view with self-diagnosis classification pills, multiple-choice retry runner, instant evaluation, explanations, hints, and SAT shortcuts.
 
+---
+
+## 11. Real Adaptive Learning Engine (Phase 8)
+
+### 11.1. Core Adaptive Engine Features
+- **Deterministic & Explainable**: Formula-driven recommendations without black-box ML or uncalibrated IRT parameters.
+- **Skill Mastery Scoring ($0.0 \to 1.0$)**:
+  $$\text{Mastery} = 0.4 \cdot \text{OverallAccuracy} + 0.4 \cdot \text{RecentAccuracy} + 0.2 \cdot \text{Confidence} - \text{MistakePenalties}$$
+  where $\text{Confidence} = \min(\text{attempts}/10, 1.0)$ and penalty is $-0.15$ for active mistakes.
+- **Skill Progression Status**:
+  - `NOT_STARTED` (0 attempts)
+  - `LEARNING` (mastery $< 0.60$)
+  - `PRACTICING` ($0.60 \le \text{mastery} < 0.80$)
+  - `STRONG` ($0.80 \le \text{mastery} < 0.90$)
+  - `MASTERED` ($\text{mastery} \ge 0.90$ AND $\ge 10$ attempts AND recent accuracy $\ge 0.85$).
+- **Rolling Window Difficulty Stepping**:
+  - Escalates difficulty (`EASY` $\rightarrow$ `MEDIUM` $\rightarrow$ `HARD`) when rolling session accuracy $\ge 80\%$.
+  - De-escalates difficulty (`HARD` $\rightarrow$ `MEDIUM` $\rightarrow$ `EASY`) when rolling session accuracy $\le 40\%$.
+  - Strict single-tier transitions (no double jumps).
+- **Pedagogical Recommendation Priority**:
+  1. `MISTAKE_REVIEW` (remediating active or overdue mistakes)
+  2. `WEAK_SKILL` (strengthening low-mastery attempted skills)
+  3. `NEW_SKILL` (introducing unattempted skills from diagnostic weak domains)
+  4. `DIFFICULTY_UP` / `DIFFICULTY_DOWN` / `MAINTENANCE`
+- **Hierarchical Question Fallback Cascade**: 5-tier fallback cascade preventing empty states while strictly enforcing a 20-attempt cooldown.
+- **Pedagogical "Why this question?"**: Human-readable explanations displayed with every recommended question.
+
+### 11.2. Adaptive Engine Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/adaptive/next` | Preview the next recommended question and pedagogical reason |
+| `GET` | `/api/v1/adaptive/analytics` | Retrieve comprehensive skill mastery breakdown and difficulty telemetry |
+| `POST` | `/api/v1/adaptive/session` | Start a new adaptive practice session or resume an active one |
+| `GET` | `/api/v1/adaptive/session/current` | Retrieve the active adaptive session and current unanswered question |
+| `GET` | `/api/v1/adaptive/session/{id}` | Retrieve adaptive session summary and completed questions |
+| `POST` | `/api/v1/adaptive/session/{id}/questions/{qid}/answer` | Submit an answer, recalculate rolling difficulty, and sync Mistake Book |
+
+### 11.3. Frontend Routes
+- `/math`: Dashboard enriched with "Continue Adaptive Practice" primary CTA and real-time "Your Adaptive Learning Path" skill mastery telemetry.
+- `/math/adaptive`: Interactive mobile-first adaptive runner with "Why this question?" recommendation cards, dynamic difficulty badges, instant evaluation, KaTeX formulas, step-by-step explanations, and session completion summaries.
+
+
 
 
