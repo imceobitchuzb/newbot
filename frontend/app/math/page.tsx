@@ -15,6 +15,7 @@ import {
   PlayCircle,
   BarChart3,
   Award,
+  BookOpen,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/Card";
@@ -168,6 +169,24 @@ export default function MathPage() {
             </Button>
           </Card>
         )}
+
+        {/* Math Mistake Book Quick Access */}
+        <Link href="/mistakes?subject=MATH" className="block group">
+          <Card className="p-3.5 bg-gradient-to-r from-rose-950/30 via-slate-900 to-slate-900 border border-rose-500/20 hover:border-rose-500/40 flex items-center justify-between transition">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-slate-100 group-hover:text-rose-300 transition">
+                  Math Mistake Book
+                </div>
+                <p className="text-[11px] text-slate-400">Review and remediate captured Math errors</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5 transition" />
+          </Card>
+        </Link>
 
         {/* Overall Math Performance Metrics */}
         <div className="grid grid-cols-2 gap-2.5">

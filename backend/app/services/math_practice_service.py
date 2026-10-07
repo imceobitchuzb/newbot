@@ -25,6 +25,7 @@ from backend.app.schemas.math_practice import (
     MathPracticeStartRequest,
 )
 from backend.app.schemas.question import QuestionOptionPublic
+from backend.app.services.mistake_book_service import MistakeBookService
 
 
 class MathPracticeService:
@@ -385,6 +386,20 @@ class MathPracticeService:
         pq.attempt_id = attempt.id
         pq.time_spent_seconds = req.time_spent_seconds
         pq.answered_at = now
+
+        # Automatic capture in Mistake Book if incorrect
+        if not is_correct:
+            await MistakeBookService.record_or_update_mistake(
+                db=db,
+                user_id=user_id,
+                question_id=q.id,
+                attempt_id=attempt.id,
+                subject=q.subject,
+                domain=q.domain,
+                skill=q.skill,
+                time_spent_seconds=req.time_spent_seconds,
+                estimated_time_seconds=q.estimated_time_seconds,
+            )
 
         # 5. Check if all questions in session are answered
         all_pqs_stmt = select(MathPracticeQuestion).where(

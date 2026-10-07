@@ -5,6 +5,15 @@ import {
   DiagnosticResult,
   DiagnosticSession,
 } from "@/types/diagnostic";
+import {
+  MistakeAnalyticsResponse,
+  MistakeClassifyRequest,
+  MistakeEntryItem,
+  MistakeListResponse,
+  MistakeRetryRequest,
+  MistakeRetryResponse,
+  MistakeReviewRequest,
+} from "@/types/mistake";
 import { AttemptResult, AttemptSubmitRequest, Question } from "@/types/question";
 import { AuthResponse, User } from "@/types/user";
 
@@ -299,6 +308,98 @@ class ApiClient {
     return this.request<import("@/types/math").DomainAnalyticsOut>(
       `/api/v1/math/domains/${encodeURIComponent(domain)}`
     );
+  }
+
+  // ==================== MISTAKE BOOK ====================
+
+  /**
+   * List mistake book entries with optional filters
+   */
+  async listMistakes(params?: {
+    subject?: string;
+    status?: string;
+    mistake_type?: string;
+    domain?: string;
+    is_due?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<MistakeListResponse> {
+    const query = new URLSearchParams();
+    if (params?.subject) query.append("subject", params.subject);
+    if (params?.status) query.append("status", params.status);
+    if (params?.mistake_type) query.append("mistake_type", params.mistake_type);
+    if (params?.domain) query.append("domain", params.domain);
+    if (params?.is_due !== undefined) query.append("is_due", String(params.is_due));
+    if (params?.limit !== undefined) query.append("limit", String(params.limit));
+    if (params?.offset !== undefined) query.append("offset", String(params.offset));
+
+    const qs = query.toString();
+    const endpoint = qs ? `/api/v1/mistakes?${qs}` : "/api/v1/mistakes";
+    return this.request<MistakeListResponse>(endpoint);
+  }
+
+  /**
+   * Get highest priority due/unresolved mistake for remediation
+   */
+  async getNextMistake(): Promise<MistakeEntryItem | null> {
+    try {
+      return await this.request<MistakeEntryItem | null>("/api/v1/mistakes/next");
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get user's error analytics and spaced repetition telemetry
+   */
+  async getMistakeAnalytics(): Promise<MistakeAnalyticsResponse> {
+    return this.request<MistakeAnalyticsResponse>("/api/v1/mistakes/analytics");
+  }
+
+  /**
+   * Get single mistake book entry by ID
+   */
+  async getMistakeById(id: string): Promise<MistakeEntryItem> {
+    return this.request<MistakeEntryItem>(`/api/v1/mistakes/${id}`);
+  }
+
+  /**
+   * Record spaced review on mistake
+   */
+  async reviewMistake(
+    id: string,
+    payload?: MistakeReviewRequest
+  ): Promise<MistakeEntryItem> {
+    return this.request<MistakeEntryItem>(`/api/v1/mistakes/${id}/review`, {
+      method: "POST",
+      body: JSON.stringify(payload || {}),
+    });
+  }
+
+  /**
+   * Update classification/root cause of mistake
+   */
+  async classifyMistake(
+    id: string,
+    payload: MistakeClassifyRequest
+  ): Promise<MistakeEntryItem> {
+    return this.request<MistakeEntryItem>(`/api/v1/mistakes/${id}/classify`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  /**
+   * Submit retry attempt on mistake
+   */
+  async retryMistake(
+    id: string,
+    payload: MistakeRetryRequest
+  ): Promise<MistakeRetryResponse> {
+    return this.request<MistakeRetryResponse>(`/api/v1/mistakes/${id}/retry`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   }
 }
 

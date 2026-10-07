@@ -239,29 +239,34 @@ CREATE TABLE user_progress (
 );
 ```
 
-### 3.5. Mistake Book & Spaced Repetition
+### 3.5. Mistake Book & Spaced Repetition (Implemented in Migration 006)
 ```sql
-CREATE TABLE mistakes (
+CREATE TABLE mistake_book_entries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
-    attempt_id UUID REFERENCES attempts(id) ON DELETE SET NULL,
-    user_answer VARCHAR(255) NOT NULL,
-    correct_answer VARCHAR(255) NOT NULL,
-    time_spent_seconds INT NOT NULL,
-    mistake_type VARCHAR(64) DEFAULT 'concept_gap', 
-    -- 'concept_gap', 'careless_mistake', 'misread_question', 'time_pressure', 'calculation_error', 'vocabulary_gap', 'grammar_gap', 'strategy_error'
-    explanation_seen BOOLEAN DEFAULT FALSE,
-    remediation_status VARCHAR(32) DEFAULT 'unresolved', -- 'unresolved', 'in_review', 'resolved'
-    review_count INT DEFAULT 0,
-    next_review_at TIMESTAMPTZ DEFAULT NOW(),
-    interval_days INT DEFAULT 1,
-    ease_factor FLOAT DEFAULT 2.5,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    attempt_id UUID REFERENCES question_attempts(id) ON DELETE SET NULL,
+    subject VARCHAR(32) NOT NULL, -- 'MATH', 'READING_WRITING'
+    domain VARCHAR(64) NOT NULL,
+    skill VARCHAR(128) NOT NULL,
+    status VARCHAR(32) DEFAULT 'ACTIVE' NOT NULL, -- 'ACTIVE', 'IN_REVIEW', 'MASTERED', 'DISMISSED'
+    mistake_type VARCHAR(64) DEFAULT 'UNKNOWN' NOT NULL, -- 'CONCEPT_GAP', 'CARELESS_ERROR', 'MISREAD', 'CALCULATION_ERROR', 'TIME_PRESSURE', 'UNKNOWN'
+    review_count INT DEFAULT 0 NOT NULL,
+    correct_retry_count INT DEFAULT 0 NOT NULL,
+    incorrect_retry_count INT DEFAULT 0 NOT NULL,
+    last_reviewed_at TIMESTAMPTZ,
+    next_review_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    CONSTRAINT uq_mistake_book_user_question UNIQUE (user_id, question_id)
 );
 
-CREATE INDEX idx_mistakes_user_review ON mistakes(user_id, remediation_status, next_review_at);
+CREATE INDEX ix_mistake_book_entries_user_id ON mistake_book_entries(user_id);
+CREATE INDEX ix_mistake_book_entries_question_id ON mistake_book_entries(question_id);
+CREATE INDEX ix_mistake_book_entries_status ON mistake_book_entries(status);
+CREATE INDEX ix_mistake_book_entries_next_review_at ON mistake_book_entries(next_review_at);
+CREATE INDEX ix_mistake_book_entries_user_status ON mistake_book_entries(user_id, status);
+CREATE INDEX ix_mistake_book_entries_user_due ON mistake_book_entries(user_id, next_review_at);
 ```
 
 ### 3.6. Diagnostic Module (Implemented in Migration 004)

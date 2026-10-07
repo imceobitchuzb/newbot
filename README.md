@@ -223,4 +223,42 @@ Visit `http://localhost:3000/practice/demo` to try the Question Engine directly:
 - `/diagnostic`: Comprehensive intro screen with Start/Resume CTA and interactive question runner.
 - `/diagnostic/result`: Calibrated score report with total & section ranges, strong areas, and weak domain growth priorities.
 
+---
+
+## 9. Real SAT Math Learning Module
+
+### 9.1. Math Content Architecture
+- **84 Original Math Questions**: Spanning all 4 College Board domains (Algebra, Advanced Math, Problem-Solving & Data Analysis, Geometry & Trigonometry) across 20 distinct skills.
+- **Customizable Practice Drills**: Filter practice sessions by specific domain, target skill, and question count (5, 10, or 20 questions).
+- **Domain & Skill Mastery Telemetry**: Real database-computed mastery analytics per domain and skill.
+
+---
+
+## 10. Real Mistake Book & Error Remediation (Phase 7)
+
+### 10.1. Mistake Book Features
+- **Automatic Capture**: Automatically logs incorrect questions from both Math Practice sessions and completed Diagnostics.
+- **Strict Anti-Duplication**: Exactly 1 active record per `(user_id, question_id)` with cumulative retry metrics.
+- **Spaced Review Schedule**: Spaced repetition interval progression: +1d $\rightarrow$ +3d $\rightarrow$ +7d $\rightarrow$ +14d $\rightarrow$ +30d.
+- **Strict Mastery Criteria**: Demands at least 2 retries and 2 consecutive correct submissions to promote to `MASTERED`.
+- **Regression Logic**: An incorrect answer on a previously mastered question immediately regresses it to `ACTIVE`.
+- **Attempt History Preservation**: Every retry creates a new `QuestionAttempt` record without mutating prior attempts.
+- **Deterministic Priority Queue**: `GET /api/v1/mistakes/next` prioritizes overdue reviews first, then active errors.
+
+### 10.2. Mistake Book Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/mistakes` | List user's mistakes with subject, status, type, and domain filters |
+| `GET` | `/api/v1/mistakes/next` | Fetch highest priority mistake due for remediation |
+| `GET` | `/api/v1/mistakes/analytics` | Summary error telemetry (active, due, mastered, mastery rate %) |
+| `GET` | `/api/v1/mistakes/{id}` | Get single mistake book entry with question details |
+| `POST` | `/api/v1/mistakes/{id}/review` | Record spaced repetition review progression |
+| `PATCH` | `/api/v1/mistakes/{id}/classify` | Update error classification (Concept Gap, Careless Error, etc.) |
+| `POST` | `/api/v1/mistakes/{id}/retry` | Submit retry attempt and evaluate mastery progression |
+
+### 10.3. Frontend Views
+- `/mistakes`: Overview dashboard with error telemetry chips, priority remediation banner, filter tabs, and KaTeX math snippets.
+- `/mistakes/[id]`: Interactive remediation view with self-diagnosis classification pills, multiple-choice retry runner, instant evaluation, explanations, hints, and SAT shortcuts.
+
+
 

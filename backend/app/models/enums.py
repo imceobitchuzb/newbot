@@ -69,3 +69,20 @@ class SkillMasteryLevel(str, Enum):
     STRONG = "STRONG"
 
 
+class MistakeStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    IN_REVIEW = "IN_REVIEW"
+    MASTERED = "MASTERED"
+    DISMISSED = "DISMISSED"
+
+
+class MistakeType(str, Enum):
+    CONCEPT_GAP = "CONCEPT_GAP"
+    CARELESS_ERROR = "CARELESS_ERROR"
+    MISREAD = "MISREAD"
+    CALCULATION_ERROR = "CALCULATION_ERROR"
+    TIME_PRESSURE = "TIME_PRESSURE"
+    UNKNOWN = "UNKNOWN"
+
+
+

@@ -4,6 +4,7 @@ from backend.app.api.v1.endpoints import (
     diagnostics,
     health,
     math,
+    mistakes,
     questions,
     users,
 )
@@ -17,4 +18,6 @@ api_router.include_router(users.router, prefix="/users", tags=["Users"])
 api_router.include_router(questions.router, prefix="/questions", tags=["Questions"])
 api_router.include_router(diagnostics.router, prefix="/diagnostics", tags=["Diagnostics"])
 api_router.include_router(math.router, prefix="/math", tags=["Math"])
+api_router.include_router(mistakes.router, prefix="/mistakes", tags=["Mistakes"])
+
 

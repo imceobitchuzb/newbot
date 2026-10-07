@@ -1,9 +1,19 @@
 import Link from "next/link";
-import { LineChart, ClipboardCheck, Clock, ChevronRight } from "lucide-react";
+import { LineChart, ClipboardCheck, Clock, ChevronRight, BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 
 export function ToolsSection() {
   const tools = [
+    {
+      title: "Mistake Book",
+      description: "Deliberately remediate errors and reach 1400+ mastery.",
+      icon: BookOpen,
+      href: "/mistakes",
+      iconColor: "text-rose-400",
+      bgColor: "bg-rose-600/15",
+      borderColor: "border-rose-500/20",
+      badge: "Remediation",
+    },
     {
       title: "Desmos Lab",
       description: "Master the graphing calculator for SAT Math.",

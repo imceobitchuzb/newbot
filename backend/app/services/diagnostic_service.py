@@ -28,6 +28,7 @@ from backend.app.schemas.diagnostic import (
 from backend.app.schemas.question import QuestionPublic
 from backend.app.services.diagnostic_question_selector import DiagnosticQuestionSelector
 from backend.app.services.diagnostic_result_service import DiagnosticResultService
+from backend.app.services.mistake_book_service import MistakeBookService
 
 
 class DiagnosticService:
@@ -369,6 +370,23 @@ class DiagnosticService:
                 await db.flush()
                 # Compute & persist result
                 await DiagnosticResultService.create_and_store_result(db, session)
+
+                # Automatically populate Mistake Book with incorrect answers from Diagnostic
+                for m in session.modules:
+                    for dq in m.questions:
+                        if dq.is_answered and dq.is_correct is False and dq.question:
+                            await MistakeBookService.record_or_update_mistake(
+                                db=db,
+                                user_id=session.user_id,
+                                question_id=dq.question_id,
+                                attempt_id=dq.attempt_id,
+                                subject=dq.question.subject,
+                                domain=dq.question.domain,
+                                skill=dq.question.skill,
+                                time_spent_seconds=dq.time_spent_seconds,
+                                estimated_time_seconds=dq.question.estimated_time_seconds,
+                            )
+
         else:
             session.current_question_index = target_dq.order_index + 1
 

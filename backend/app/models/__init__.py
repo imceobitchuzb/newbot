@@ -12,6 +12,8 @@ from backend.app.models.enums import (
     DomainClassification,
     MathDomain,
     MathPracticeSessionStatus,
+    MistakeStatus,
+    MistakeType,
     QuestionStatus,
     QuestionType,
     ReadingWritingDomain,
@@ -22,6 +24,7 @@ from backend.app.models.math_practice import (
     MathPracticeQuestion,
     MathPracticeSession,
 )
+from backend.app.models.mistake_book import MistakeBookEntry
 from backend.app.models.profile import UserProfile
 from backend.app.models.question import (
     Passage,
@@ -46,6 +49,7 @@ __all__ = [
     "DiagnosticResult",
     "MathPracticeSession",
     "MathPracticeQuestion",
+    "MistakeBookEntry",
     "Subject",
     "MathDomain",
     "ReadingWritingDomain",
@@ -57,5 +61,8 @@ __all__ = [
     "DomainClassification",
     "MathPracticeSessionStatus",
     "SkillMasteryLevel",
+    "MistakeStatus",
+    "MistakeType",
 ]
+
 

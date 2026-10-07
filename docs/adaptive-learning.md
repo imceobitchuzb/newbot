@@ -159,3 +159,32 @@ Upon diagnostic completion:
 ### 7.5. Diagnostic vs. Official SAT Score Disclaimer
 The calculated range is an algorithmic **diagnostic approximation** designed for EdTech study pacing and gap identification. It is explicitly labeled as an estimate and does not represent official College Board psychometric scaling.
 
+---
+
+## 8. Phase 7 Mistake Book & Deliberate Remediation Engine
+
+### 8.1. Automatic Capture & Idempotency
+- **Triggers**:
+  - `MathPracticeService.submit_answer`: Any incorrect answer immediately records or updates an entry in `mistake_book_entries`.
+  - `DiagnosticService.submit_answer`: When the final diagnostic module completes, all incorrect diagnostic questions are automatically captured.
+- **Uniqueness**: Enforced by composite database constraint `UNIQUE(user_id, question_id)`. Subsequent errors on the same question update telemetry (`incorrect_retry_count`, timestamps) without creating duplicate records.
+
+### 8.2. Spaced Repetition Schedule
+Reviews are scheduled deterministically using exponential interval spacing based on review progression:
+- Review 0 $\rightarrow$ +1 day (24 hours)
+- Review 1 $\rightarrow$ +3 days (72 hours)
+- Review 2 $\rightarrow$ +7 days (1 week)
+- Review 3 $\rightarrow$ +14 days (2 weeks)
+- Review 4+ $\rightarrow$ +30 days (1 month)
+
+### 8.3. Strict Mastery Criteria & Regression Logic
+- **Mastery Rule**: An entry transitions to `status = 'MASTERED'` **only** when:
+  1. At least 2 retries have been submitted (`total_retries >= 2`).
+  2. The last 2 consecutive attempts on the question were correct.
+- **Regression Logic**: If a user later answers a `MASTERED` question incorrectly during subsequent practice drills or reviews, it immediately regresses to `status = 'ACTIVE'` with review due interval reset to +1 day.
+
+### 8.4. Immutability of Attempt History
+- Retries create **new** `QuestionAttempt` rows linked to the user and question.
+- Historical attempts are strictly preserved and never mutated or overwritten.
+
+
