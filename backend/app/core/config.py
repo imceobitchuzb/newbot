@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
-    TELEGRAM_WEBAPP_URL: str = "https://001214c36c6783.lhr.life"
+    TELEGRAM_WEBAPP_URL: str = "https://recipes-untitled-varieties-wishing.trycloudflare.com"
 
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./sat_master.db"

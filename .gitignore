@@ -3,6 +3,10 @@
 .env.*
 !.env.example
 
+# Binaries and local tools
+tools/
+*.exe
+
 # Python
 __pycache__/
 *.py[cod]

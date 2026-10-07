@@ -265,7 +265,7 @@ async def run_bot_24_7():
         logger.error("TELEGRAM_BOT_TOKEN is not configured in settings.")
         return
 
-    webapp_url = os.getenv("TELEGRAM_WEBAPP_URL", settings.TELEGRAM_WEBAPP_URL or "https://001214c36c6783.lhr.life")
+    webapp_url = os.getenv("TELEGRAM_WEBAPP_URL", settings.TELEGRAM_WEBAPP_URL or "https://recipes-untitled-varieties-wishing.trycloudflare.com")
     logger.info(f"Starting 24/7 SAT MASTER Telegram Bot with WebApp URL: {webapp_url}")
 
     consecutive_errors = 0
