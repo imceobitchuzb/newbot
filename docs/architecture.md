@@ -105,21 +105,40 @@ graph TD
 
 ## 4. Telegram Mini App Security & Authentication
 
-### Cryptographic Validation Flow
+### 4.1. Cryptographic Validation Flow
 Telegram WebApp transmits user credentials wrapped in `initData`. Client-side user ID inputs are **strictly untrusted**.
 
-1. The frontend extracts `Telegram.WebApp.initData` as raw URL-encoded string.
-2. The frontend sends `Authorization: tma <initData>` header with every API request.
+1. The frontend extracts `window.Telegram.WebApp.initData` as a raw URL-encoded query string.
+2. The frontend POSTs `{"init_data": "<raw_init_data>"}` to `/api/v1/auth/telegram`.
 3. The backend `TelegramAuthService`:
    - Parses the query string into key-value pairs.
-   - Extracts the `hash` parameter.
+   - Extracts the `hash` parameter and excludes it from the data check string.
    - Sorts remaining keys alphabetically and formats as `key=value\n`.
-   - Computes a secret key: `HMAC_SHA256(bot_token, "WebAppData")`.
-   - Computes data hash: `HMAC_SHA256(secret_key, sorted_data_string)`.
-   - Compares computed hash with provided hash using constant-time comparison (`hmac.compare_digest`).
-   - Verifies `auth_date` timestamp to prevent replay attacks (maximum age: 86400 seconds / 24h).
-4. Once verified, the backend extracts the verified `id`, `first_name`, `username`, and fetches or creates the user record.
-5. In development mode (`ENVIRONMENT=development`), a mock authentication provider is available for local browser development outside Telegram.
+   - Computes a secret key: `HMAC_SHA256("WebAppData", bot_token)`.
+   - Computes data signature: `HMAC_SHA256(secret_key, data_check_string)`.
+   - Compares computed signature with provided hash using constant-time comparison (`hmac.compare_digest`).
+   - Verifies `auth_date` timestamp freshness (rejecting requests older than 24 hours).
+4. Once verified, the backend extracts the verified `id`, `first_name`, `last_name`, `username`, and `photo_url`.
+
+### 4.2. Application Session & JWT Token Model
+Raw Telegram `initData` is never used as a persistent session. Upon successful validation:
+1. `UserService` looks up or registers the student by `telegram_id`.
+2. Backend generates a signed, short-lived **JWT Access Token** (`HS256`, 7-day expiration).
+   - Payload: `{"sub": "<user_uuid>", "iat": <now>, "exp": <expire>, "type": "access"}`.
+   - **Zero Secrets Injected**: No Telegram bot token, DB credentials, or sensitive data exist in the token.
+3. The frontend stores this token in secure client-side storage and supplies `Authorization: Bearer <token>` on all future requests (e.g. `GET /api/v1/users/me`).
+
+### 4.3. User & Learning Profile Separation
+The system splits user data into two decoupled layers:
+- **`User` (Account & Identity)**: `telegram_id` (primary identity key), names, username, avatar, level, XP, timestamps.
+- **`UserProfile` (Pedagogical State)**: `target_score` (default 1400), `diagnostic_status` (`not_started`, `in_progress`, `completed`), `study_goal`, `daily_goal_minutes`, and section estimates.
+  - Initial state after first registration is strictly `diagnostic_status = "not_started"`. No false baseline statistics are fabricated.
+
+### 4.4. Development Browser Behavior
+When launching in a standard desktop browser outside Telegram:
+- The frontend detects that `Telegram.WebApp` is not active.
+- Instead of crashing or fabricating user credentials, the app gracefully presents **Development Browser Mode**.
+- Developers can click `[Connect as Dev Student]` to trigger `/api/v1/auth/dev` (strictly disabled when `APP_ENV=production`), allowing full UI and API validation without native Telegram clients.
 
 ---
 

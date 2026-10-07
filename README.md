@@ -160,11 +160,26 @@ npm run build
 
 ---
 
-## 6. Telegram Mini App Integration
+## 6. Telegram Mini App Authentication & User System
 
-When accessed within Telegram:
-1. Telegram injects `window.Telegram.WebApp`.
-2. The frontend extracts `Telegram.WebApp.initData`.
-3. The raw string is transmitted to the backend `TelegramAuthService`.
-4. The backend validates the HMAC-SHA256 signature using the secret derived from `TELEGRAM_BOT_TOKEN`.
-5. Authenticated users are created or retrieved from the database without trusting raw client IDs.
+### 6.1. Production Telegram Flow
+1. When opened inside Telegram (iOS, Android, or Desktop), Telegram injects `window.Telegram.WebApp`.
+2. The frontend extracts `Telegram.WebApp.initData` (raw query string).
+3. The frontend calls `POST /api/v1/auth/telegram` with `{"init_data": "<raw_init_data>"}`.
+4. The backend `TelegramAuthService` cryptographically validates:
+   - Secret key derived via `HMAC_SHA256("WebAppData", TELEGRAM_BOT_TOKEN)`.
+   - Data-check string assembled from sorted parameters excluding `hash`.
+   - Signature match via constant-time comparison.
+   - `auth_date` freshness check (must be within 24 hours).
+5. The backend `UserService` retrieves or creates the student account and linked `UserProfile` (with `diagnostic_status = "not_started"`).
+6. The backend issues a short-lived signed JWT access token (`HS256`).
+7. The frontend uses `Authorization: Bearer <token>` on all future requests (such as `GET /api/v1/users/me`).
+
+### 6.2. Desktop Browser Development Mode
+To develop and test outside of Telegram:
+- Start backend and frontend servers as usual.
+- Navigate to `http://localhost:3000`.
+- The app detects that `Telegram.WebApp` is not active and renders **Development Browser Mode**.
+- Click **Connect as Dev Student** to obtain a development session (`POST /api/v1/auth/dev`).
+- This allows full local UI and API verification without launching the Telegram client.
+- *Note: `POST /api/v1/auth/dev` is strictly disabled when `APP_ENV=production`.*

@@ -1,9 +1,12 @@
+from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import json
 import time
 from typing import Any, Dict, Optional
-from urllib.parse import parse_qsl, unquote
+from urllib.parse import parse_qsl
+import jwt
+from backend.app.core.config import settings
 
 
 class TelegramAuthError(Exception):
@@ -23,6 +26,19 @@ class AuthDateExpiredError(TelegramAuthError):
 
 class MalformedInitDataError(TelegramAuthError):
     """Raised when initData string format is invalid."""
+    pass
+
+
+class TokenAuthError(Exception):
+    """Base exception for JWT authentication failures."""
+    pass
+
+
+class InvalidTokenError(TokenAuthError):
+    pass
+
+
+class TokenExpiredError(TokenAuthError):
     pass
 
 
@@ -105,3 +121,51 @@ def validate_telegram_init_data(
             pass
 
     return result
+
+
+# --- Application JWT Security ---
+
+JWT_ALGORITHM = "HS256"
+DEFAULT_ACCESS_TOKEN_EXPIRE_DAYS = 7
+
+
+def create_access_token(
+    user_id: str,
+    expires_delta: Optional[timedelta] = None,
+) -> str:
+    """
+    Creates a signed JWT access token for an authenticated user.
+    Only internal user_id is encoded in the subject claim.
+    No secrets or sensitive user information are included.
+    """
+    now = datetime.now(timezone.utc)
+    if expires_delta:
+        expire = now + expires_delta
+    else:
+        expire = now + timedelta(days=DEFAULT_ACCESS_TOKEN_EXPIRE_DAYS)
+
+    payload = {
+        "sub": str(user_id),
+        "iat": int(now.timestamp()),
+        "exp": int(expire.timestamp()),
+        "type": "access",
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+
+def decode_access_token(token: str) -> Dict[str, Any]:
+    """
+    Decodes and validates a JWT access token.
+    Raises TokenExpiredError or InvalidTokenError if invalid.
+    """
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[JWT_ALGORITHM],
+        )
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise TokenExpiredError("Access token has expired.")
+    except jwt.PyJWTError as e:
+        raise InvalidTokenError(f"Invalid access token: {str(e)}")

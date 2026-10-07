@@ -68,6 +68,21 @@ CREATE TABLE users (
 );
 
 CREATE INDEX idx_users_telegram_id ON users(telegram_id);
+
+CREATE TABLE user_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    target_score INT DEFAULT 1400 NOT NULL,
+    diagnostic_status VARCHAR(32) DEFAULT 'not_started' NOT NULL, -- 'not_started', 'in_progress', 'completed'
+    study_goal VARCHAR(255) DEFAULT 'Score 1400+ in 4 months' NOT NULL,
+    daily_goal_minutes INT DEFAULT 30 NOT NULL,
+    math_estimate INT,
+    rw_estimate INT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
 ```
 
 ### 3.2. Topics, Subtopics & Lessons

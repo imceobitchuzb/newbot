@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
+from backend.app.schemas.profile import UserProfileResponse
 
 
 class UserBase(BaseModel):
@@ -39,3 +40,4 @@ class UserResponse(UserBase):
     last_active_at: datetime
     created_at: datetime
     updated_at: datetime
+    profile: Optional[UserProfileResponse] = None

@@ -1,9 +1,12 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from sqlalchemy import BigInteger, Boolean, DateTime, Integer, String, Text, Uuid
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from backend.app.models.profile import UserProfile
 
 
 class User(Base, TimestampMixin):
@@ -81,6 +84,14 @@ class User(Base, TimestampMixin):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
+    )
+
+    profile: Mapped[Optional["UserProfile"]] = relationship(
+        "UserProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy="joined",
     )
 
     def __repr__(self) -> str:
