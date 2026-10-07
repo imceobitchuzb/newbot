@@ -9,7 +9,11 @@ import {
   ReactNode,
 } from "react";
 import { authService } from "@/lib/auth";
-import { getTelegramInitData, isTelegramWebAppAvailable } from "@/lib/telegram";
+import {
+  getTelegramInitData,
+  isTelegramWebAppAvailable,
+  initTelegramWebApp,
+} from "@/lib/telegram";
 import { User } from "@/types/user";
 
 export type AuthStatus =
@@ -56,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // 2. If in Telegram environment with initData, authenticate automatically
+    initTelegramWebApp();
     const isTg = isTelegramWebAppAvailable();
     const initData = getTelegramInitData();
 
@@ -66,10 +71,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus("authenticated");
         return;
       } catch (err: any) {
-        console.error("Telegram authentication failed:", err);
-        setError(err.message || "Failed to authenticate with Telegram.");
-        setStatus("error");
-        return;
+        console.warn("First Telegram auth attempt failed, retrying once...", err);
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 600));
+          const retryUser = await authService.authenticateWithTelegram();
+          setUser(retryUser);
+          setStatus("authenticated");
+          return;
+        } catch (retryErr: any) {
+          console.error("Telegram authentication failed after retry:", retryErr);
+          setError(retryErr.message || "Не удалось загрузить профиль через Telegram.");
+          setStatus("error");
+          return;
+        }
       }
     }
 

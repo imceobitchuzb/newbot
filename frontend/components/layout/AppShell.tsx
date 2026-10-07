@@ -14,7 +14,7 @@ export interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const { user, status, error, loginDev } = useAuth();
+  const { user, status, error, loginDev, loginWithTelegram } = useAuth();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white relative">
@@ -70,19 +70,33 @@ export function AppShell({ children }: AppShellProps) {
               <Card className="border-rose-800 bg-rose-950/30 p-5 space-y-3">
                 <div className="flex items-center gap-2 text-rose-400 text-xs font-semibold">
                   <AlertCircle className="w-4 h-4" />
-                  <span>Failed to load profile</span>
+                  <span>Не удалось загрузить профиль</span>
                 </div>
                 <p className="text-xs text-rose-200 leading-relaxed">
-                  {error || "Could not connect to SAT MASTER service."}
+                  {error || "Не удалось соединиться с сервисом авторизации SAT MASTER."}
                 </p>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => loginDev()}
-                >
-                  <RefreshCw className="w-3.5 h-3.5 mr-1" />
-                  <span>Try again</span>
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      loginWithTelegram().catch(() => loginDev());
+                    }}
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                    <span>Повторить попытку</span>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => loginDev()}
+                  >
+                    <UserIcon className="w-3.5 h-3.5 mr-1" />
+                    <span>Войти как гость</span>
+                  </Button>
+                </div>
               </Card>
             </div>
           )}
