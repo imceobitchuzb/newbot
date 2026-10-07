@@ -12,7 +12,13 @@ export class AuthService {
       throw new Error("Telegram initData is empty or unavailable.");
     }
     const response = await api.loginTelegram(initData);
-    return response.user;
+    // Fetch authoritative fresh profile from /users/me after session establishment
+    try {
+      const freshUser = await api.getMe();
+      return freshUser;
+    } catch {
+      return response.user;
+    }
   }
 
   /**
@@ -24,7 +30,12 @@ export class AuthService {
       first_name: firstName,
       username: "dev_student",
     });
-    return response.user;
+    try {
+      const freshUser = await api.getMe();
+      return freshUser;
+    } catch {
+      return response.user;
+    }
   }
 
   /**
@@ -35,8 +46,11 @@ export class AuthService {
     if (!token) return null;
     try {
       return await api.getMe();
-    } catch {
-      api.clearToken();
+    } catch (err: any) {
+      // Clear token only if authorization rejected by backend
+      if (err?.status === 401 || err?.status === 403 || err?.isAuthError) {
+        api.clearToken();
+      }
       return null;
     }
   }

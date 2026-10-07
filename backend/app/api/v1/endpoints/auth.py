@@ -33,24 +33,29 @@ async def auth_telegram(
     Creates a new user profile on first launch or refreshes existing user session.
     Returns a secure JWT Bearer token for application requests.
     """
+    logger.info("[AUTH START] Incoming Telegram authentication request")
     try:
         tg_user_data = telegram_auth_service.authenticate_init_data(payload.init_data)
     except InvalidSignatureError:
+        logger.warning("[AUTH FAILURE] Invalid Telegram HMAC signature")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Telegram signature.",
         )
     except AuthDateExpiredError:
+        logger.warning("[AUTH FAILURE] Telegram auth date expired")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Telegram authentication expired.",
         )
     except MalformedInitDataError as e:
+        logger.warning(f"[AUTH FAILURE] Malformed initData: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Malformed Telegram initData: {str(e)}",
         )
     except TelegramAuthError as e:
+        logger.warning(f"[AUTH FAILURE] Telegram authentication error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Telegram authentication failed: {str(e)}",
@@ -58,6 +63,8 @@ async def auth_telegram(
 
     user = await user_service.get_or_create_from_telegram(db, tg_user_data)
     access_token = create_access_token(user_id=str(user.id))
+    logger.info(f"[JWT CREATED] Generated session token for user {user.id}")
+    logger.info(f"[AUTH SUCCESS] User {user.id} (telegram_id={user.telegram_id}) authenticated successfully")
 
     return AuthResponse(
         access_token=access_token,

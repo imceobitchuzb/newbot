@@ -24,7 +24,7 @@ class UserService:
         now = datetime.now(timezone.utc)
 
         if not user:
-            logger.info(f"Creating new user from Telegram id: {tg_user.id} ({tg_user.first_name})")
+            logger.info(f"[USER CREATED] Creating new user for telegram_id={tg_user.id} ({tg_user.first_name})")
             user = User(
                 telegram_id=tg_user.id,
                 username=tg_user.username,
@@ -48,6 +48,7 @@ class UserService:
             user.profile = profile
 
             user = await user_repository.create(db, user)
+            logger.info(f"[PROFILE CREATED] Created default UserProfile for user {user.id}")
         else:
             # Update user profile metadata from latest Telegram state
             updated = False

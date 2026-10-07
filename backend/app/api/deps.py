@@ -56,6 +56,7 @@ async def get_current_user(
 
     user = await user_service.get_user_by_id(db, user_uuid)
     if not user:
+        logger.warning(f"[USER NOT FOUND] User ID {user_uuid} not found in database")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found.",

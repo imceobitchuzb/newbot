@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: sat_master_postgres
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-sat_master}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -18,6 +18,61 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sat_master_backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sat_master}
+      SECRET_KEY: ${SECRET_KEY:-sat-master-dev-secret-key-32chars-minimum-safe}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sat_master_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      BACKEND_INTERNAL_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  bot:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sat_master_bot
+    restart: unless-stopped
+    command: ["python", "bot.py"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sat_master}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL}
+      SECRET_KEY: ${SECRET_KEY:-sat-master-dev-secret-key-32chars-minimum-safe}
+    depends_on:
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:

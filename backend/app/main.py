@@ -37,8 +37,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Root-level health endpoint
-app.add_api_route("/health", get_health, methods=["GET"], tags=["Health"])
+# Root-level health endpoint (Liveness probe)
+@app.get("/health", tags=["Health"])
+async def root_liveness():
+    """Liveness probe: verifies application process is alive."""
+    return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION, "liveness": "alive"}
 
 # Versioned API Router
 app.include_router(api_router, prefix="/api/v1")

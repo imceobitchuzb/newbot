@@ -200,3 +200,148 @@ async def test_security_tampered_payload_rejected():
             json={"init_data": tampered},
         )
         assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_user_profile_auto_created_when_missing():
+    """
+    Verifies that if a User exists in DB with no UserProfile, GET /users/me
+    automatically creates a UserProfile with safe defaults.
+    """
+    from datetime import datetime, timezone
+    from backend.app.core.database import async_session_factory
+    from backend.app.models.user import User
+
+    now = datetime.now(timezone.utc)
+    unique_tg_id = 99112233
+
+    async with async_session_factory() as session:
+        bare_user = User(
+            telegram_id=unique_tg_id,
+            first_name="BareStudent",
+            target_score=1400,
+            current_score_estimate=700,
+            math_estimate=360,
+            rw_estimate=340,
+            last_active_at=now,
+        )
+        session.add(bare_user)
+        await session.commit()
+        await session.refresh(bare_user)
+        bare_user_id = bare_user.id
+
+    token = create_access_token(user_id=str(bare_user_id))
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        res = await client.get(
+            "/api/v1/users/me",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["profile"] is not None
+        assert data["profile"]["target_score"] == 1400
+        assert data["profile"]["diagnostic_status"] == "not_started"
+
+
+@pytest.mark.asyncio
+async def test_users_me_expired_jwt_rejected():
+    """
+    Verifies that an expired JWT token returns 401 Unauthorized.
+    """
+    from datetime import timedelta
+    expired_token = create_access_token(
+        user_id="00000000-0000-0000-0000-000000000001",
+        expires_delta=timedelta(seconds=-10),
+    )
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get(
+            "/api/v1/users/me",
+            headers={"Authorization": f"Bearer {expired_token}"},
+        )
+        assert response.status_code == 401
+        assert "expired" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_cross_user_protection():
+    """
+    Verifies that User A's token cannot retrieve or impersonate User B.
+    """
+    now = int(time.time())
+    user_a = {"id": 1000001, "first_name": "Alice"}
+    user_b = {"id": 1000002, "first_name": "Bob"}
+
+    init_a = generate_test_init_data(settings.TELEGRAM_BOT_TOKEN, user_a, auth_date=now)
+    init_b = generate_test_init_data(settings.TELEGRAM_BOT_TOKEN, user_b, auth_date=now)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        res_a = await client.post("/api/v1/auth/telegram", json={"init_data": init_a})
+        res_b = await client.post("/api/v1/auth/telegram", json={"init_data": init_b})
+
+        token_a = res_a.json()["access_token"]
+        token_b = res_b.json()["access_token"]
+
+        me_a = await client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token_a}"})
+        me_b = await client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token_b}"})
+
+        assert me_a.json()["first_name"] == "Alice"
+        assert me_b.json()["first_name"] == "Bob"
+        assert me_a.json()["id"] != me_b.json()["id"]
+
+
+@pytest.mark.asyncio
+async def test_dev_auth_blocked_in_production():
+    """
+    Verifies that /api/v1/auth/dev is blocked with 403 Forbidden in production environment.
+    """
+    orig_env = settings.APP_ENV
+    settings.APP_ENV = "production"
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post(
+                "/api/v1/auth/dev",
+                json={"telegram_id": 12345, "first_name": "DevTest"},
+            )
+            assert response.status_code == 403
+            assert "disabled in production" in response.json()["detail"]
+    finally:
+        settings.APP_ENV = orig_env
+
+
+@pytest.mark.asyncio
+async def test_db_unavailable_readiness_check(monkeypatch):
+    """
+    Verifies that /api/v1/health returns 503 Service Unavailable when DB is disconnected.
+    """
+    from backend.app.api.v1.endpoints import health
+
+    async def mock_disconnected():
+        return False
+
+    monkeypatch.setattr(health, "check_db_connection", mock_disconnected)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/api/v1/health")
+        assert response.status_code == 503
+        data = response.json()
+        assert data["database"] == "disconnected"
+        assert data["status"] == "unhealthy"
+
+
+@pytest.mark.asyncio
+async def test_cors_configuration():
+    """
+    Verifies that CORS headers allow configured origin.
+    """
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.options(
+            "/api/v1/health",
+            headers={
+                "Origin": "http://localhost:3000",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        assert response.status_code == 200
+        assert "access-control-allow-origin" in response.headers

@@ -9,11 +9,25 @@ from sqlalchemy.ext.asyncio import (
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
 
+is_postgres = settings.DATABASE_URL.startswith("postgresql")
+
+engine_kwargs = {
+    "echo": False,
+    "future": True,
+    "pool_pre_ping": True,
+}
+
+if is_postgres:
+    engine_kwargs.update({
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_recycle": 1800,
+        "pool_timeout": 30,
+    })
+
 engine: AsyncEngine = create_async_engine(
     settings.DATABASE_URL,
-    echo=False,
-    future=True,
-    pool_pre_ping=True,
+    **engine_kwargs,
 )
 
 async_session_factory = async_sessionmaker(

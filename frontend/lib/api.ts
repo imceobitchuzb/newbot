@@ -49,19 +49,36 @@ export interface HealthStatus {
   database?: string;
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window === "undefined" ? "http://localhost:8000" : "");
+export class ApiError extends Error {
+  public status: number;
+  public detail: string;
+  public isAuthError: boolean;
+  public isNetworkError: boolean;
+
+  constructor(status: number, detail: string, isNetworkError: boolean = false) {
+    super(detail || `HTTP ${status}`);
+    this.name = "ApiError";
+    this.status = status;
+    this.detail = detail;
+    this.isAuthError = status === 401 || status === 403;
+    this.isNetworkError = isNetworkError;
+  }
+}
+
+export function resolveApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+    if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+      return envUrl.replace(/\/+$/, "");
+    }
+    return "";
+  }
+  return (process.env.BACKEND_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+}
 
 const TOKEN_STORAGE_KEY = "sat_master_access_token";
 
 class ApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl.replace(/\/+$/, "");
-  }
-
   public getToken(): string | null {
     if (typeof window === "undefined") return null;
     return localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -77,8 +94,13 @@ class ApiClient {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
   }
 
+  public getBaseUrl(): string {
+    return resolveApiBaseUrl();
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+    const base = this.getBaseUrl();
+    const url = `${base}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -90,13 +112,25 @@ class ApiClient {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...headers,
-        ...options.headers,
-      },
-    });
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[API Request] ${options.method || "GET"} ${url} (hasToken: ${!!token})`);
+    }
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers: {
+          ...headers,
+          ...options.headers,
+        },
+      });
+    } catch (err: any) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error(`[API Network Error] ${url}:`, err);
+      }
+      throw new ApiError(0, "Не удалось связаться с сервером. Проверьте интернет-соединение.", true);
+    }
 
     if (!response.ok) {
       let errorMessage = `HTTP error ${response.status}`;
@@ -106,7 +140,10 @@ class ApiClient {
       } catch {
         // Fallback
       }
-      throw new Error(errorMessage);
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[API ${response.status}] ${url}:`, errorMessage);
+      }
+      throw new ApiError(response.status, errorMessage);
     }
 
     return response.json();
@@ -690,5 +727,5 @@ class ApiClient {
 
 
 
-export const api = new ApiClient(API_BASE_URL);
+export const api = new ApiClient();
 

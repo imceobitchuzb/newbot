@@ -23,10 +23,17 @@ export type AuthStatus =
   | "error"
   | "telegram_required";
 
+export type AuthErrorCategory =
+  | "none"
+  | "auth_failed"
+  | "server_unavailable"
+  | "database_error";
+
 interface AuthContextValue {
   user: User | null;
   status: AuthStatus;
   error: string | null;
+  errorCategory: AuthErrorCategory;
   loginWithTelegram: () => Promise<void>;
   loginDev: () => Promise<void>;
   logout: () => void;
@@ -39,10 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [error, setError] = useState<string | null>(null);
+  const [errorCategory, setErrorCategory] = useState<AuthErrorCategory>("none");
 
   const initAuth = useCallback(async () => {
     setStatus("loading");
     setError(null);
+    setErrorCategory("none");
 
     // 1. Check if we already have a valid JWT token in local storage
     if (authService.hasToken()) {
@@ -53,8 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setStatus("authenticated");
           return;
         }
-      } catch {
-        // Token invalid, clear and continue
+      } catch (err) {
         authService.logout();
       }
     }
@@ -71,19 +79,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus("authenticated");
         return;
       } catch (err: any) {
-        console.warn("First Telegram auth attempt failed, retrying once...", err);
-        try {
-          await new Promise((resolve) => setTimeout(resolve, 600));
-          const retryUser = await authService.authenticateWithTelegram();
-          setUser(retryUser);
-          setStatus("authenticated");
-          return;
-        } catch (retryErr: any) {
-          console.error("Telegram authentication failed after retry:", retryErr);
-          setError(retryErr.message || "Не удалось загрузить профиль через Telegram.");
-          setStatus("error");
-          return;
+        console.warn("Telegram authentication attempt failed:", err);
+        if (err?.status === 401 || err?.status === 403 || err?.isAuthError) {
+          setErrorCategory("auth_failed");
+          setError("Не удалось авторизоваться через Telegram. Пожалуйста, запустите приложение через бота @jfsjf2ijridjbot.");
+        } else if (err?.isNetworkError || err?.status === 502 || err?.status === 503 || err?.status === 504) {
+          setErrorCategory("server_unavailable");
+          setError("Сервер временно недоступен. Проверьте интернет-соединение или повторите попытку.");
+        } else {
+          setErrorCategory("auth_failed");
+          setError(err?.message || "Не удалось загрузить профиль через Telegram.");
         }
+        setStatus("error");
+        return;
       }
     }
 
@@ -98,12 +106,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithTelegram = async () => {
     setStatus("loading");
     setError(null);
+    setErrorCategory("none");
     try {
       const authUser = await authService.authenticateWithTelegram();
       setUser(authUser);
       setStatus("authenticated");
     } catch (err: any) {
-      setError(err.message || "Authentication failed");
+      if (err?.status === 401 || err?.status === 403 || err?.isAuthError) {
+        setErrorCategory("auth_failed");
+        setError("Не удалось войти через Telegram. Попробуйте перезапустить бота.");
+      } else {
+        setErrorCategory("server_unavailable");
+        setError("Сервер временно недоступен. Попробуйте еще раз.");
+      }
       setStatus("error");
     }
   };
@@ -111,12 +126,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginDev = async () => {
     setStatus("loading");
     setError(null);
+    setErrorCategory("none");
     try {
       const authUser = await authService.authenticateDev();
       setUser(authUser);
       setStatus("authenticated");
     } catch (err: any) {
       setError(err.message || "Dev login failed");
+      setErrorCategory("server_unavailable");
       setStatus("error");
     }
   };
@@ -140,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         status,
         error,
+        errorCategory,
         loginWithTelegram,
         loginDev,
         logout,
