@@ -16,13 +16,13 @@ export function ToolsSection() {
     },
     {
       title: "Desmos Lab",
-      description: "Master the graphing calculator for SAT Math.",
+      description: "Master SAT calculator strategies, regressions & visual intersections.",
       icon: LineChart,
       href: "/desmos",
       iconColor: "text-cyan-400",
       bgColor: "bg-cyan-600/15",
       borderColor: "border-cyan-500/20",
-      badge: "Tricks",
+      badge: "Strategies",
     },
     {
       title: "Diagnostic",

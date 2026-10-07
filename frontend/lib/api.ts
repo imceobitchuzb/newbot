@@ -22,6 +22,13 @@ import {
   MistakeRetryResponse,
   MistakeReviewRequest,
 } from "@/types/mistake";
+import {
+  DesmosAnalytics,
+  DesmosAnswerResponse,
+  DesmosSession,
+  DesmosTechnique,
+  DesmosTechniqueDetail,
+} from "@/types/desmos";
 import { AttemptResult, AttemptSubmitRequest, Question } from "@/types/question";
 import { AuthResponse, User } from "@/types/user";
 
@@ -478,7 +485,113 @@ class ApiClient {
       }
     );
   }
+
+  // ==================== DESMOS LAB ====================
+
+  /**
+   * List all canonical Desmos techniques with user practice metrics
+   */
+  async getDesmosTechniques(): Promise<{ items: DesmosTechnique[]; total: number }> {
+    return this.request<{ items: DesmosTechnique[]; total: number }>("/api/v1/desmos/techniques");
+  }
+
+  /**
+   * Get technique details by slug
+   */
+  async getDesmosTechniqueBySlug(slug: string): Promise<DesmosTechniqueDetail> {
+    return this.request<DesmosTechniqueDetail>(`/api/v1/desmos/techniques/${encodeURIComponent(slug)}`);
+  }
+
+  /**
+   * Query questions where Desmos is permitted
+   */
+  async getDesmosQuestions(params?: {
+    technique_slug?: string;
+    recommended_only?: boolean;
+    difficulty?: string;
+    limit?: number;
+  }): Promise<{ items: any[]; total: number }> {
+    const query = new URLSearchParams();
+    if (params?.technique_slug) query.set("technique_slug", params.technique_slug);
+    if (params?.recommended_only) query.set("recommended_only", "true");
+    if (params?.difficulty) query.set("difficulty", params.difficulty);
+    if (params?.limit) query.set("limit", params.limit.toString());
+    const qs = query.toString();
+    return this.request<{ items: any[]; total: number }>(`/api/v1/desmos/questions${qs ? `?${qs}` : ""}`);
+  }
+
+  /**
+   * Start or resume a Desmos practice session
+   */
+  async startDesmosSession(data?: {
+    technique_slug?: string;
+    technique_type?: string;
+    difficulty?: string;
+    target_count?: number;
+    recommended_only?: boolean;
+  }): Promise<DesmosSession> {
+    return this.request<DesmosSession>("/api/v1/desmos/session", {
+      method: "POST",
+      body: JSON.stringify(data || {}),
+    });
+  }
+
+  /**
+   * Get active Desmos practice session
+   */
+  async getCurrentDesmosSession(): Promise<DesmosSession | null> {
+    try {
+      return await this.request<DesmosSession | null>("/api/v1/desmos/session/current");
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get Desmos practice session by ID
+   */
+  async getDesmosSession(sessionId: string): Promise<DesmosSession> {
+    return this.request<DesmosSession>(`/api/v1/desmos/session/${sessionId}`);
+  }
+
+  /**
+   * Submit answer in a Desmos practice session
+   */
+  async submitDesmosAnswer(
+    sessionId: string,
+    questionId: string,
+    payload: {
+      selected_option_id: string;
+      time_spent_seconds?: number;
+      desmos_used?: boolean;
+    }
+  ): Promise<DesmosAnswerResponse> {
+    return this.request<DesmosAnswerResponse>(
+      `/api/v1/desmos/session/${sessionId}/questions/${questionId}/answer`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  }
+
+  /**
+   * Abandon an in-progress Desmos practice session
+   */
+  async abandonDesmosSession(sessionId: string): Promise<DesmosSession> {
+    return this.request<DesmosSession>(`/api/v1/desmos/session/${sessionId}/abandon`, {
+      method: "POST",
+    });
+  }
+
+  /**
+   * Get user's Desmos usage analytics
+   */
+  async getDesmosAnalytics(): Promise<DesmosAnalytics> {
+    return this.request<DesmosAnalytics>("/api/v1/desmos/analytics");
+  }
 }
+
 
 
 export const api = new ApiClient(API_BASE_URL);

@@ -200,6 +200,29 @@ export default function MathPage() {
           </Card>
         )}
 
+        {/* Desmos Lab Quick Access */}
+        <Link href="/desmos" className="block group">
+          <Card className="p-3.5 bg-gradient-to-r from-cyan-950/30 via-slate-900 to-slate-900 border border-cyan-500/20 hover:border-cyan-500/40 flex items-center justify-between transition">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
+                <Calculator className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-slate-100 group-hover:text-cyan-300 transition flex items-center gap-1.5">
+                  <span>Desmos Lab</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-normal">
+                    Interactive Strategies
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Master SAT graphing calculator shortcuts, regressions & intersections
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5 transition" />
+          </Card>
+        </Link>
+
         {/* Math Mistake Book Quick Access */}
         <Link href="/mistakes?subject=MATH" className="block group">
           <Card className="p-3.5 bg-gradient-to-r from-rose-950/30 via-slate-900 to-slate-900 border border-rose-500/20 hover:border-rose-500/40 flex items-center justify-between transition">

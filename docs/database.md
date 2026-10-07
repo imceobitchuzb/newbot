@@ -439,7 +439,82 @@ CREATE INDEX ix_adaptive_practice_questions_question_id ON adaptive_practice_que
 CREATE INDEX ix_adaptive_practice_questions_session_order ON adaptive_practice_questions(session_id, order_index);
 ```
 
-### 3.8. Gamification, Daily Challenges & Streaks
+### 3.8. Desmos Lab (Implemented in Migration 008)
+```sql
+CREATE TABLE desmos_techniques (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    technique_type VARCHAR(64) UNIQUE NOT NULL,
+    slug VARCHAR(64) UNIQUE NOT NULL,
+    title VARCHAR(128) NOT NULL,
+    summary TEXT NOT NULL,
+    steps JSON NOT NULL,
+    when_to_use JSON NOT NULL,
+    when_not_to_use JSON NOT NULL,
+    common_pitfalls JSON NOT NULL,
+    sat_speed_tips JSON NOT NULL,
+    desmos_expression_template TEXT,
+    order_index INT DEFAULT 0 NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX ix_desmos_techniques_slug ON desmos_techniques(slug);
+CREATE INDEX ix_desmos_techniques_order_index ON desmos_techniques(order_index);
+
+CREATE TABLE question_desmos_techniques (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    technique_id UUID NOT NULL REFERENCES desmos_techniques(id) ON DELETE CASCADE,
+    is_primary BOOLEAN DEFAULT TRUE NOT NULL,
+    technique_guidance TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    CONSTRAINT uq_question_desmos_technique UNIQUE (question_id, technique_id)
+);
+
+CREATE INDEX ix_question_desmos_techniques_question_id ON question_desmos_techniques(question_id);
+CREATE INDEX ix_question_desmos_techniques_technique_id ON question_desmos_techniques(technique_id);
+
+CREATE TABLE desmos_practice_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    technique_id UUID REFERENCES desmos_techniques(id) ON DELETE SET NULL,
+    status VARCHAR(32) DEFAULT 'IN_PROGRESS' NOT NULL, -- 'IN_PROGRESS', 'COMPLETED', 'ABANDONED'
+    target_count INT DEFAULT 10 NOT NULL,
+    completed_count INT DEFAULT 0 NOT NULL,
+    correct_count INT DEFAULT 0 NOT NULL,
+    started_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX ix_desmos_practice_sessions_user_id ON desmos_practice_sessions(user_id);
+CREATE INDEX ix_desmos_practice_sessions_status ON desmos_practice_sessions(status);
+CREATE INDEX ix_desmos_practice_sessions_user_status ON desmos_practice_sessions(user_id, status);
+
+CREATE TABLE desmos_practice_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES desmos_practice_sessions(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    order_index INT NOT NULL,
+    selected_option_id UUID REFERENCES question_options(id) ON DELETE SET NULL,
+    is_correct BOOLEAN,
+    time_spent_seconds INT,
+    desmos_used BOOLEAN DEFAULT TRUE NOT NULL,
+    attempt_id UUID REFERENCES question_attempts(id) ON DELETE SET NULL,
+    answered_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    CONSTRAINT uq_desmos_practice_order UNIQUE (session_id, order_index),
+    CONSTRAINT uq_desmos_practice_question UNIQUE (session_id, question_id)
+);
+
+CREATE INDEX ix_desmos_practice_questions_session_id ON desmos_practice_questions(session_id);
+CREATE INDEX ix_desmos_practice_questions_question_id ON desmos_practice_questions(question_id);
+CREATE INDEX ix_desmos_practice_questions_session_order ON desmos_practice_questions(session_id, order_index);
+```
+
+### 3.9. Gamification, Daily Challenges & Streaks
 ```sql
 CREATE TABLE daily_challenges (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

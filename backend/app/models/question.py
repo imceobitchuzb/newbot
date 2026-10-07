@@ -21,6 +21,7 @@ from backend.app.models.enums import (
 )
 
 if TYPE_CHECKING:
+    from backend.app.models.desmos import QuestionDesmosTechnique
     from backend.app.models.user import User
 
 
@@ -148,6 +149,11 @@ class Question(Base, TimestampMixin):
     )
     attempts: Mapped[List["QuestionAttempt"]] = relationship(
         "QuestionAttempt",
+        back_populates="question",
+        cascade="all, delete-orphan",
+    )
+    desmos_techniques: Mapped[List["QuestionDesmosTechnique"]] = relationship(
+        "QuestionDesmosTechnique",
         back_populates="question",
         cascade="all, delete-orphan",
     )

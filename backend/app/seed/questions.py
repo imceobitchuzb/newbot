@@ -1061,11 +1061,15 @@ async def seed_questions(db: AsyncSession) -> int:
 
 
 async def run_seed():
+    from backend.app.seed.desmos_techniques_seed import seed_desmos_techniques
     async with async_session_factory() as session:
         count = await seed_questions(session)
         print(f"Successfully seeded {count} questions.")
+        d_count = await seed_desmos_techniques(session)
+        print(f"Successfully seeded {d_count} Desmos techniques.")
 
 
 if __name__ == "__main__":
     import asyncio
     asyncio.run(run_seed())
+

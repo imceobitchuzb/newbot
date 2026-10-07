@@ -301,6 +301,36 @@ Visit `http://localhost:3000/practice/demo` to try the Question Engine directly:
 - `/math`: Dashboard enriched with "Continue Adaptive Practice" primary CTA and real-time "Your Adaptive Learning Path" skill mastery telemetry.
 - `/math/adaptive`: Interactive mobile-first adaptive runner with "Why this question?" recommendation cards, dynamic difficulty badges, instant evaluation, KaTeX formulas, step-by-step explanations, and session completion summaries.
 
+---
+
+## 12. Real Desmos Lab & Calculator Mastery (Phase 9)
+
+### 12.1. Desmos Lab Architecture & Philosophy
+- **14 Canonical Digital SAT Techniques**: Regression (`~`), System Intersections, Sliders (`k`), Root & Vertex Finding, Table of Values, Inequality Shading, Function Notation (`f(x)`), Circle Graphing, Expression Equivalence, Fast Arithmetic, Constant of Proportionality, Statistical Regression, System of Inequalities, and Direct Graph Reading.
+- **12 Fully Seeded Techniques**: Detailed step-by-step instructions, When to Use criteria, When NOT to Use warnings, common SAT traps, and speed hacks.
+- **Question Mapping**: Over 120 technique mappings connected directly to existing Math questions in the database.
+- **Desmos Panel**: Interactive guidance panel rendered with questions indicating whether Desmos is recommended (`REQUIRED`, `RECOMMENDED`, `NEUTRAL`, `AVOID`), tactical reasons, and an embedded or external Desmos calculator toggle.
+- **Complete Ecosystem Integration**: Desmos practice attempts record real `QuestionAttempt` history, sync incorrect answers automatically with the Mistake Book, and track overall Desmos utilization rates.
+
+### 12.2. Desmos Lab Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/desmos/techniques` | List all 12 canonical Desmos techniques with question counts |
+| `GET` | `/api/v1/desmos/techniques/{slug}` | Retrieve deep-dive guide, steps, SAT speed tips, and sample question |
+| `GET` | `/api/v1/desmos/questions` | Filter question bank by Desmos recommendation or technique slug |
+| `POST` | `/api/v1/desmos/session` | Start a technique drill or comprehensive Desmos practice session |
+| `GET` | `/api/v1/desmos/session/current` | Retrieve active in-progress Desmos practice session |
+| `GET` | `/api/v1/desmos/session/{id}` | Retrieve Desmos session status and question progress |
+| `POST` | `/api/v1/desmos/session/{id}/questions/{qid}/answer` | Submit an answer, record Desmos usage, and sync Mistake Book |
+| `POST` | `/api/v1/desmos/session/{id}/abandon` | Abandon an in-progress Desmos practice session |
+| `GET` | `/api/v1/desmos/analytics` | Telemetry on total Desmos questions attempted, accuracy, and technique counts |
+
+### 12.3. Frontend Routes
+- `/desmos`: Comprehensive Desmos Lab hub featuring user telemetry stats, quick start drill launchers, and all 12 canonical technique cards.
+- `/desmos/[technique]`: Technique deep-dive with workflow steps, When to Use / When NOT to Use checklists, SAT speed tips, pitfalls, and interactive example questions.
+- `/desmos/practice`: Focused Desmos practice runner with timer, Desmos recommendations panel, collapsible calculator frame, KaTeX equations, instant answer feedback, Mistake Book sync alerts, and session completion summaries.
+- Entry points also placed directly on the main Dashboard tools section and the `/math` learning hub.
+
 
 
 

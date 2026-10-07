@@ -155,7 +155,7 @@ All endpoints are versioned under `/api/v1/`:
 | `/api/v1/adaptive` | Adaptive practice sessions: `GET /next`, `GET /analytics`, `POST /session`, `GET /session/current`, `GET /session/{id}`, `POST /session/{id}/questions/{qid}/answer` |
 | `/api/v1/mistakes` | Mistake book querying, mistake categorization, retry queue |
 | `/api/v1/lessons` | Topic lessons, concept walkthroughs, SAT shortcuts |
-| `/api/v1/desmos` | Desmos interactive guides, shortcuts, and embedded graphs |
+| `/api/v1/desmos` | Desmos Lab: `GET /techniques`, `GET /techniques/{slug}`, `GET /questions`, `POST /session`, `GET /session/current`, `GET /session/{id}`, `POST /session/{id}/questions/{qid}/answer`, `POST /session/{id}/abandon`, `GET /analytics` |
 | `/api/v1/ai/tutor` | AI Tutor assistance (HINT, EXPLAIN, SOLVE, ANOTHER_METHOD, SAT_TRICK) |
 | `/api/v1/diagnostics` | Diagnostic test lifecycle: start/resume, get current progress, submit answers, and retrieve score estimation reports (`/latest/result`, `/{id}/result`) |
 | `/api/v1/tests/full` | Full SAT exam simulations (timed modules) |

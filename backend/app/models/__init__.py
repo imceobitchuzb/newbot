@@ -10,9 +10,17 @@ from backend.app.models.diagnostic import (
     DiagnosticResult,
     DiagnosticSession,
 )
+from backend.app.models.desmos import (
+    DesmosPracticeQuestion,
+    DesmosPracticeSession,
+    DesmosTechnique,
+    QuestionDesmosTechnique,
+)
 from backend.app.models.enums import (
     AdaptiveSessionStatus,
     AdaptiveSkillStatus,
+    DesmosSessionStatus,
+    DesmosTechniqueType,
     DiagnosticModuleStatus,
     DiagnosticStatus,
     Difficulty,
@@ -61,6 +69,10 @@ __all__ = [
     "AdaptiveProfile",
     "AdaptivePracticeSession",
     "AdaptivePracticeQuestion",
+    "DesmosTechnique",
+    "QuestionDesmosTechnique",
+    "DesmosPracticeSession",
+    "DesmosPracticeQuestion",
     "Subject",
     "MathDomain",
     "ReadingWritingDomain",
@@ -77,6 +89,9 @@ __all__ = [
     "AdaptiveSkillStatus",
     "RecommendationType",
     "AdaptiveSessionStatus",
+    "DesmosTechniqueType",
+    "DesmosSessionStatus",
 ]
+
 
 

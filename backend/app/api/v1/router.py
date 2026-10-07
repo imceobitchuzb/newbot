@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from backend.app.api.v1.endpoints import (
     adaptive,
     auth,
+    desmos,
     diagnostics,
     health,
     math,
@@ -21,5 +22,7 @@ api_router.include_router(diagnostics.router, prefix="/diagnostics", tags=["Diag
 api_router.include_router(math.router, prefix="/math", tags=["Math"])
 api_router.include_router(mistakes.router, prefix="/mistakes", tags=["Mistakes"])
 api_router.include_router(adaptive.router)
+api_router.include_router(desmos.router)
+
 
 
