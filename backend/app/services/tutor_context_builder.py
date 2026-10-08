@@ -38,8 +38,8 @@ class TutorContextBuilder:
         profile = profile_res.scalar_one_or_none()
         if profile:
             summary["diagnostic_status"] = profile.diagnostic_status
-            if profile.diagnostic_results:
-                summary["diagnostic_score_range"] = f"{profile.diagnostic_results.get('total_low', 400)}-{profile.diagnostic_results.get('total_high', 1600)}"
+            if profile.math_estimate and profile.rw_estimate:
+                summary["diagnostic_score_range"] = f"{profile.math_estimate + profile.rw_estimate}"
 
         # Active mistakes count
         mistakes_count_res = await db.execute(

@@ -3,16 +3,20 @@ from typing import Optional
 
 from backend.app.services.ai.base import BaseAIProvider
 from backend.app.services.ai.openai_provider import OpenAIProvider
+from backend.app.services.ai.pedagogical_provider import PedagogicalSATProvider
 
 _active_provider: Optional[BaseAIProvider] = None
 
 
 def get_ai_provider() -> BaseAIProvider:
-    """Return the active AI provider singleton or default to OpenAIProvider."""
+    """Return active AI provider singleton, OpenAIProvider if configured, or PedagogicalSATProvider."""
     global _active_provider
     if _active_provider is not None:
         return _active_provider
-    return OpenAIProvider()
+    openai_provider = OpenAIProvider()
+    if openai_provider.is_configured():
+        return openai_provider
+    return PedagogicalSATProvider()
 
 
 def set_ai_provider(provider: Optional[BaseAIProvider]) -> None:

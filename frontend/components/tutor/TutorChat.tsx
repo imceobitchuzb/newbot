@@ -164,11 +164,36 @@ export const TutorChat: React.FC<TutorChatProps> = ({
       api.getTutorConversations().then(setConversations).catch(() => {});
     } catch (err: any) {
       console.error("Failed to send message:", err);
-      setErrorMessage(
-        err.detail || "AI Tutor is temporarily unavailable. Your progress is safe."
-      );
-      // Reload active conversation to discard temporary optimistic message on failure
-      loadConversationDetail(activeConversation.id);
+      const errDetail =
+        err?.detail ||
+        (typeof err?.message === "string" ? err.message : null) ||
+        "AI Tutor is temporarily unavailable. Please try again.";
+      setErrorMessage(errDetail);
+      if (!quickPrompt && text) {
+        setInputText(text);
+      }
+      setActiveConversation((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          messages: [
+            ...prev.messages.filter((m) => m.id !== tempUserMsg.id),
+            {
+              ...tempUserMsg,
+              content: text,
+            },
+            {
+              id: "err-" + Date.now(),
+              conversation_id: activeConversation.id,
+              role: "ASSISTANT",
+              content: `⚠️ ${errDetail}`,
+              mode: selectedMode,
+              actions: [],
+              created_at: new Date().toISOString(),
+            },
+          ],
+        };
+      });
     } finally {
       setIsLoading(false);
     }

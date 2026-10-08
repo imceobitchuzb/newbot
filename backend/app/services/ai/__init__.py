@@ -10,6 +10,7 @@ from backend.app.services.ai.base import (
 )
 from backend.app.services.ai.fake_provider import FakeAIProvider
 from backend.app.services.ai.openai_provider import OpenAIProvider
+from backend.app.services.ai.pedagogical_provider import PedagogicalSATProvider
 from backend.app.services.ai.provider import (
     get_ai_provider,
     reset_ai_provider,
@@ -26,6 +27,7 @@ __all__ = [
     "AIProviderRateLimitError",
     "AIProviderInvalidResponseError",
     "OpenAIProvider",
+    "PedagogicalSATProvider",
     "FakeAIProvider",
     "get_ai_provider",
     "set_ai_provider",

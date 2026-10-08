@@ -620,3 +620,32 @@ async def test_one_shot_explain_endpoint():
         assert "message" in data
         assert data["mode"] == "HINT"
         assert "actions" in data
+
+
+@pytest.mark.asyncio
+async def test_pedagogical_provider_fallback():
+    """Verify that when no external AI API key is configured, the tutor falls back to the pedagogical engine seamlessly."""
+    user = await create_test_user()
+    token = create_access_token(user.id)
+    # Ensure no mock provider override is set
+    reset_ai_provider()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        c_resp = await ac.post(
+            "/api/v1/tutor/conversations",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"title": "Pedagogical Test", "context_type": "GENERAL"},
+        )
+        assert c_resp.status_code == 201
+        conv_id = c_resp.json()["id"]
+
+        m_resp = await ac.post(
+            f"/api/v1/tutor/conversations/{conv_id}/messages",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"content": "How do I solve quadratic systems in Desmos?", "mode": "HINT"},
+        )
+        assert m_resp.status_code == 200
+        data = m_resp.json()
+        assert "content" in data
+        assert len(data["content"]) > 0
+        assert len(data["actions"]) > 0

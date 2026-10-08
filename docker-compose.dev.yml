@@ -3,18 +3,18 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: sat_master_postgres
+    container_name: sat_master_postgres_dev
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-sat_master}
+      POSTGRES_DB: ${POSTGRES_DB:-sat_master_dev}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sat_master}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sat_master_dev}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,14 +23,17 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: sat_master_backend
+    container_name: sat_master_backend_dev
     restart: unless-stopped
+    command: ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./backend:/app/backend
     environment:
-      APP_ENV: production
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sat_master}
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sat_master_dev}
       SECRET_KEY: ${SECRET_KEY:-sat-master-dev-secret-key-32chars-minimum-safe}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL}
+      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL:-http://localhost:3000}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
@@ -40,22 +43,21 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: sat_master_frontend
+    container_name: sat_master_frontend_dev
     restart: unless-stopped
+    command: ["npm", "run", "dev"]
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       BACKEND_INTERNAL_URL: http://backend:8000
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     ports:
       - "3000:3000"
     depends_on:
@@ -65,17 +67,19 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: sat_master_bot
+    container_name: sat_master_bot_dev
     restart: unless-stopped
     command: ["python", "bot.py"]
+    volumes:
+      - ./backend:/app/backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sat_master}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sat_master_dev}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL}
+      TELEGRAM_WEBAPP_URL: ${TELEGRAM_WEBAPP_URL:-http://localhost:3000}
       SECRET_KEY: ${SECRET_KEY:-sat-master-dev-secret-key-32chars-minimum-safe}
     depends_on:
       backend:
         condition: service_healthy
 
 volumes:
-  postgres_data:
+  postgres_dev_data:

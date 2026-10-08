@@ -90,7 +90,7 @@ async def test_auth_endpoint_malformed():
 @pytest.mark.asyncio
 async def test_new_user_created_and_existing_user_returned():
     now = int(time.time())
-    unique_tg_id = 778899001
+    unique_tg_id = int(time.time() * 1000) % 900_000_000 + 200_000_000
     tg_user = {
         "id": unique_tg_id,
         "first_name": "OriginalName",
@@ -129,7 +129,7 @@ async def test_new_user_created_and_existing_user_returned():
 @pytest.mark.asyncio
 async def test_users_me_authenticated():
     now = int(time.time())
-    tg_user = {"id": 44556677, "first_name": "TestStudent"}
+    tg_user = {"id": int(time.time() * 1000) % 900_000_000 + 300_000_000, "first_name": "TestStudent"}
     init_data = generate_test_init_data(settings.TELEGRAM_BOT_TOKEN, tg_user, auth_date=now)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -143,7 +143,7 @@ async def test_users_me_authenticated():
         )
         assert me_res.status_code == 200
         me_data = me_res.json()
-        assert me_data["telegram_id"] == 44556677
+        assert me_data["telegram_id"] == tg_user["id"]
         assert me_data["first_name"] == "TestStudent"
         assert me_data["profile"]["target_score"] == 1400
 
@@ -213,7 +213,7 @@ async def test_user_profile_auto_created_when_missing():
     from backend.app.models.user import User
 
     now = datetime.now(timezone.utc)
-    unique_tg_id = 99112233
+    unique_tg_id = int(time.time() * 1000) % 900_000_000 + 100_000_000
 
     async with async_session_factory() as session:
         bare_user = User(
