@@ -104,7 +104,7 @@ export function MathText({ content, text, className = "" }: MathTextProps) {
         </span>
       );
     });
-  }, [content]);
+  }, [textContent]);
 
   return <div className={`leading-relaxed ${className}`}>{renderedElements}</div>;
 }

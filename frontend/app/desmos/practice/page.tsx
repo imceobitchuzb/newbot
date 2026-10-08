@@ -292,7 +292,7 @@ function DesmosPracticeContent() {
         />
 
         {/* Question Card */}
-        <Card className="p-4 sm:p-5 bg-slate-900/90 border-slate-800 space-y-4">
+        <Card key={activeQuestion.id} className="p-4 sm:p-5 bg-slate-900/90 border-slate-800 space-y-4">
           <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
             <span className="font-semibold text-slate-300">{activeQuestion.domain}</span>
             <div className="flex items-center gap-1.5">

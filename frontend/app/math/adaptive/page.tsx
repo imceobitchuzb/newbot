@@ -319,7 +319,7 @@ export default function AdaptivePracticePage() {
         )}
 
         {/* Question Text Box */}
-        <Card className="p-4 bg-slate-900/90 border-slate-800 space-y-3">
+        <Card key={currentQ.id} className="p-4 bg-slate-900/90 border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
             <div className="text-xs text-slate-400 font-medium">
               {currentQ.domain}

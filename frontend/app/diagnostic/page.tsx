@@ -247,7 +247,7 @@ export default function DiagnosticPage() {
           </div>
 
           {/* Question Card */}
-          <Card className="p-5 space-y-4 bg-slate-900/90 border-slate-800">
+          <Card key={q.id} className="p-5 space-y-4 bg-slate-900/90 border-slate-800">
             {/* Domain & Skill tags */}
             <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
               <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">

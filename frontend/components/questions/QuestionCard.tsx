@@ -22,6 +22,14 @@ export function QuestionCard({ question, onNextQuestion }: QuestionCardProps) {
   const [result, setResult] = useState<AttemptResult | null>(null);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
 
+  // Reset state whenever question ID changes
+  useEffect(() => {
+    setSelectedOptionId(null);
+    setIsSubmitting(false);
+    setResult(null);
+    setSecondsElapsed(0);
+  }, [question.id]);
+
   // Per-question timer
   useEffect(() => {
     if (result) return; // Stop timer upon answer submission

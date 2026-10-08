@@ -55,7 +55,7 @@ export function QuestionMeta({ question }: QuestionMetaProps) {
       </div>
 
       <div className="flex items-center gap-2 text-slate-400">
-        {question.desmos_allowed && (
+        {isMath && question.desmos_allowed && (
           <span
             title="Desmos Graphing Calculator permitted"
             className="flex items-center gap-1 text-[10px] text-cyan-400 bg-cyan-950/40 px-1.5 py-0.5 rounded border border-cyan-800/40"

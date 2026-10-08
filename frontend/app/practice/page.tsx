@@ -48,35 +48,39 @@ export default function PracticePage() {
           </h2>
 
           <div className="grid grid-cols-1 gap-2.5">
-            <Card className="p-3.5 bg-slate-900/60 border-slate-800 flex items-center justify-between opacity-80">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-600/15 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                  <Calculator className="w-4 h-4" />
+            <Link href="/math">
+              <Card className="p-3.5 bg-slate-900/60 border-slate-800 hover:border-slate-700 transition flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600/15 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                    <Calculator className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-200">Math Practice</h3>
+                    <p className="text-[11px] text-slate-400">Targeted drills across 4 math domains</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-200">Math Practice</h3>
-                  <p className="text-[11px] text-slate-400">Targeted drills across 4 math domains</p>
-                </div>
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-medium">
-                Phase 5
-              </span>
-            </Card>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium border border-blue-500/20">
+                  Active
+                </span>
+              </Card>
+            </Link>
 
-            <Card className="p-3.5 bg-slate-900/60 border-slate-800 flex items-center justify-between opacity-80">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-600/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                  <BookOpen className="w-4 h-4" />
+            <Link href="/reading-writing">
+              <Card className="p-3.5 bg-slate-900/60 border-slate-800 hover:border-slate-700 transition flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <BookOpen className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-200">Reading & Writing</h3>
+                    <p className="text-[11px] text-slate-400">Passage comprehension & grammar rules</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-200">Reading & Writing</h3>
-                  <p className="text-[11px] text-slate-400">Passage comprehension & grammar rules</p>
-                </div>
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-medium">
-                Phase 6
-              </span>
-            </Card>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium border border-emerald-500/20">
+                  Active
+                </span>
+              </Card>
+            </Link>
 
             <Card className="p-3.5 bg-slate-900/60 border-slate-800 flex items-center justify-between opacity-80">
               <div className="flex items-center gap-3">

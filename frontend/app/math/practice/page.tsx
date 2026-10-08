@@ -320,7 +320,7 @@ function PracticeRunnerContent() {
           </div>
 
           {/* Question Text Card */}
-          <Card className="p-4 bg-slate-900/90 border-slate-800 text-slate-100 text-xs sm:text-sm leading-relaxed space-y-3">
+          <Card key={currentQ.question_id} className="p-4 bg-slate-900/90 border-slate-800 text-slate-100 text-xs sm:text-sm leading-relaxed space-y-3">
             <MathText content={currentQ.question_text} />
           </Card>
 
