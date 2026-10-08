@@ -136,12 +136,12 @@ class MathPracticeService:
         existing_res = await db.execute(stmt)
         active_session = existing_res.scalar_one_or_none()
 
+        clean_dom = req.domain.upper() if req.domain and req.domain != "ALL" else None
+        clean_diff = req.difficulty.upper() if req.difficulty and req.difficulty != "MIXED" else None
+        clean_skill = normalize_skill(req.skill) if req.skill else None
+
         if active_session:
             # If active session exists with same configuration, resume it
-            clean_dom = req.domain.upper() if req.domain and req.domain != "ALL" else None
-            clean_diff = req.difficulty.upper() if req.difficulty and req.difficulty != "MIXED" else None
-            clean_skill = normalize_skill(req.skill) if req.skill else None
-
             if (
                 active_session.domain == clean_dom
                 and active_session.difficulty == clean_diff
@@ -154,63 +154,27 @@ class MathPracticeService:
                 active_session.status = MathPracticeSessionStatus.ABANDONED.value
                 await db.flush()
 
-        # 2. Select questions
-        query = (
-            select(Question)
-            .where(
-                Question.subject == Subject.MATH.value,
-                Question.status == QuestionStatus.PUBLISHED.value,
-            )
-            .options(selectinload(Question.options))
+        # 2. Select questions via Question Engine 2.0
+        from backend.app.services.question_selector import (
+            QuestionSelectionCriteria,
+            QuestionSelectorService,
         )
 
-        clean_dom = req.domain.upper() if req.domain and req.domain != "ALL" else None
-        if clean_dom:
-            query = query.where(Question.domain == clean_dom)
-
-        clean_diff = req.difficulty.upper() if req.difficulty and req.difficulty != "MIXED" else None
-        if clean_diff:
-            query = query.where(Question.difficulty == clean_diff)
-
-        clean_skill = normalize_skill(req.skill) if req.skill else None
-        if clean_skill:
-            query = query.where(Question.skill == clean_skill)
-
-        # Order randomly
-        query = query.order_by(func.random()).limit(req.question_count)
-        res = await db.execute(query)
-        selected_questions = list(res.scalars().all())
-
-        # Fallback if filters were too restrictive
-        if len(selected_questions) < req.question_count and clean_diff:
-            fallback_query = (
-                select(Question)
-                .where(
-                    Question.subject == Subject.MATH.value,
-                    Question.status == QuestionStatus.PUBLISHED.value,
-                )
-                .options(selectinload(Question.options))
-            )
-            if clean_dom:
-                fallback_query = fallback_query.where(Question.domain == clean_dom)
-            fallback_query = fallback_query.order_by(func.random()).limit(req.question_count)
-            fallback_res = await db.execute(fallback_query)
-            selected_questions = list(fallback_res.scalars().all())
-
-        if not selected_questions:
-            # Fallback to any Math questions
-            generic_query = (
-                select(Question)
-                .where(
-                    Question.subject == Subject.MATH.value,
-                    Question.status == QuestionStatus.PUBLISHED.value,
-                )
-                .options(selectinload(Question.options))
-                .order_by(func.random())
-                .limit(req.question_count)
-            )
-            generic_res = await db.execute(generic_query)
-            selected_questions = list(generic_res.scalars().all())
+        criteria = QuestionSelectionCriteria(
+            subject=Subject.MATH.value,
+            domain=req.domain,
+            skill=req.skill,
+            difficulty=req.difficulty,
+            count=req.question_count,
+            avoid_recently_seen=True,
+            prefer_unseen=True,
+            prefer_weak_skills=True,
+        )
+        selected_questions = await QuestionSelectorService.select_questions(
+            db=db,
+            criteria=criteria,
+            user_id=user_id,
+        )
 
         if not selected_questions:
             raise HTTPException(

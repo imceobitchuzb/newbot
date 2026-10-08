@@ -38,6 +38,9 @@ class QuestionPublic(BaseModel):
     estimated_time_seconds: int
     desmos_allowed: bool
     desmos_recommended: bool
+    template_id: Optional[str] = None
+    variant_group: Optional[str] = None
+    source_type: Optional[str] = "ORIGINAL"
 
 
 class AttemptSubmitRequest(BaseModel):

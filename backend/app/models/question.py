@@ -135,6 +135,26 @@ class Question(Base, TimestampMixin):
         index=True,
         nullable=False,
     )
+    template_id: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        nullable=True,
+        index=True,
+    )
+    variant_group: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        nullable=True,
+        index=True,
+    )
+    source_type: Mapped[str] = mapped_column(
+        String(32),
+        default="ORIGINAL",
+        index=True,
+        nullable=False,
+    )
+    metadata_json: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
 
     passage: Mapped[Optional["Passage"]] = relationship(
         "Passage",

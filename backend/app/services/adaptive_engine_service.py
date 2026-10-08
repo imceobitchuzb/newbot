@@ -463,102 +463,40 @@ class AdaptiveEngineService:
         Deterministic question selection with hierarchical fallbacks.
         Guaranteed to return a question as long as at least 1 published question exists.
         """
-        # If a specific mistake question is forced, load it
-        if force_question_id:
-            q_stmt = (
-                select(Question)
-                .where(Question.id == force_question_id)
-                .options(selectinload(Question.options), selectinload(Question.passage))
-            )
-            res = await db.execute(q_stmt)
-            forced_q = res.scalar_one_or_none()
-            if forced_q:
-                return forced_q
-
-        if excluded_question_ids is None:
-            excluded_question_ids = set()
-
-        # Cooldown: Fetch up to last 20 answered questions for user
-        recent_cooldown_stmt = (
-            select(QuestionAttempt.question_id)
-            .where(QuestionAttempt.user_id == user_id)
-            .order_by(QuestionAttempt.answered_at.desc())
-            .limit(20)
+        from backend.app.services.question_selector import (
+            QuestionSelectionCriteria,
+            QuestionSelectorService,
         )
-        cooldown_res = await db.execute(recent_cooldown_stmt)
-        cooldown_ids = set(cooldown_res.scalars().all()) | excluded_question_ids
 
-        async def _query_candidate(
-            skill_filter: Optional[str],
-            domain_filter: Optional[str],
-            diff_filter: Optional[str],
-            ignore_cooldown: bool = False,
-        ) -> Optional[Question]:
-            stmt = (
-                select(Question)
-                .where(
-                    Question.subject == subject,
-                    Question.status == "PUBLISHED",
-                )
-                .options(selectinload(Question.options), selectinload(Question.passage))
-                .order_by(Question.id.asc())
+        criteria = QuestionSelectionCriteria(
+            subject=subject,
+            domain=target_domain,
+            skill=target_skill,
+            difficulty=target_difficulty,
+            excluded_question_ids=excluded_question_ids or set(),
+            avoid_recently_seen=True,
+            cooldown_window=20,
+            prefer_unseen=True,
+            prefer_weak_skills=True,
+            force_question_id=force_question_id,
+        )
+        cand = await QuestionSelectorService.select_single_question(
+            db=db,
+            criteria=criteria,
+            user_id=user_id,
+        )
+        if cand:
+            return cand
+
+        # Fallback to any published question in subject if pool was exhausted
+        fallback_stmt = (
+            select(Question)
+            .where(
+                Question.subject == subject,
+                Question.status == "PUBLISHED",
             )
-            if skill_filter:
-                stmt = stmt.where(Question.skill == skill_filter)
-            if domain_filter:
-                stmt = stmt.where(Question.domain == domain_filter)
-            if diff_filter:
-                stmt = stmt.where(Question.difficulty == diff_filter)
-            if not ignore_cooldown and cooldown_ids:
-                stmt = stmt.where(~Question.id.in_(cooldown_ids))
-
-            stmt = stmt.limit(1)
-            cand_res = await db.execute(stmt)
-            return cand_res.scalar_one_or_none()
-
-        # 1. Exact match (skill + difficulty) with cooldown
-        cand = await _query_candidate(target_skill, target_domain, target_difficulty)
-        if cand:
-            return cand
-
-        # 2. Same skill, adjacent difficulty
-        adjacent_difficulties = []
-        if target_difficulty == Difficulty.HARD.value:
-            adjacent_difficulties = [Difficulty.MEDIUM.value, Difficulty.EASY.value]
-        elif target_difficulty == Difficulty.EASY.value:
-            adjacent_difficulties = [Difficulty.MEDIUM.value, Difficulty.HARD.value]
-        else:
-            adjacent_difficulties = [Difficulty.EASY.value, Difficulty.HARD.value]
-
-        for adj_diff in adjacent_difficulties:
-            cand = await _query_candidate(target_skill, target_domain, adj_diff)
-            if cand:
-                return cand
-
-        # 3. Same domain, target difficulty
-        cand = await _query_candidate(None, target_domain, target_difficulty)
-        if cand:
-            return cand
-
-        # 4. Same domain, any difficulty
-        for adj_diff in adjacent_difficulties:
-            cand = await _query_candidate(None, target_domain, adj_diff)
-            if cand:
-                return cand
-
-        # 5. Broader Math pool with cooldown
-        cand = await _query_candidate(None, None, target_difficulty)
-        if cand:
-            return cand
-
-        cand = await _query_candidate(None, None, None)
-        if cand:
-            return cand
-
-        # 6. Fallback ignoring cooldown if all pool questions were seen
-        cand = await _query_candidate(target_skill, target_domain, target_difficulty, ignore_cooldown=True)
-        if cand:
-            return cand
-
-        cand = await _query_candidate(None, None, None, ignore_cooldown=True)
-        return cand
+            .options(selectinload(Question.options), selectinload(Question.passage))
+            .limit(1)
+        )
+        res = await db.execute(fallback_stmt)
+        return res.scalar_one_or_none()

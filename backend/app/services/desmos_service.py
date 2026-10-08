@@ -315,7 +315,7 @@ class DesmosService:
                     QuestionDesmosTechnique.technique_id == target_technique.id,
                 )
                 .options(selectinload(Question.options))
-                .order_by(Question.id.asc())
+                .order_by(func.random())
             )
             if req.recommended_only:
                 link_q_stmt = link_q_stmt.where(Question.desmos_recommended == True)
@@ -340,7 +340,7 @@ class DesmosService:
                     Question.desmos_recommended == True,
                 )
                 .options(selectinload(Question.options))
-                .order_by(Question.id.asc())
+                .order_by(func.random())
             )
             if req.difficulty:
                 rec_stmt = rec_stmt.where(Question.difficulty == req.difficulty)
@@ -361,7 +361,7 @@ class DesmosService:
                     Question.desmos_allowed == True,
                 )
                 .options(selectinload(Question.options))
-                .order_by(Question.id.asc())
+                .order_by(func.random())
             )
             all_res = await db.execute(all_stmt)
             for q in all_res.scalars().all():

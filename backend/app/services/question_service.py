@@ -13,6 +13,12 @@ from backend.app.schemas.question import (
 )
 
 
+from backend.app.services.question_selector import (
+    QuestionSelectionCriteria,
+    QuestionSelectorService,
+)
+
+
 class QuestionService:
     async def list_published(
         self,
@@ -22,15 +28,32 @@ class QuestionService:
         skill: Optional[str] = None,
         difficulty: Optional[str] = None,
         limit: int = 20,
+        user_id: Optional[uuid.UUID] = None,
     ) -> List[QuestionPublic]:
-        questions = await question_repository.list_published(
-            db,
+        criteria = QuestionSelectionCriteria(
             subject=subject,
             domain=domain,
             skill=skill,
             difficulty=difficulty,
-            limit=limit,
+            count=min(limit, 50),
+            avoid_recently_seen=True if user_id else False,
+            prefer_unseen=True if user_id else False,
         )
+        questions = await QuestionSelectorService.select_questions(
+            db=db,
+            criteria=criteria,
+            user_id=user_id,
+        )
+        if not questions:
+            # Fallback to direct repo query if selector criteria yielded nothing
+            questions = await question_repository.list_published(
+                db,
+                subject=subject,
+                domain=domain,
+                skill=skill,
+                difficulty=difficulty,
+                limit=limit,
+            )
         return [QuestionPublic.model_validate(q) for q in questions]
 
     async def get_for_learner(
@@ -51,12 +74,27 @@ class QuestionService:
         db: AsyncSession,
         subject: Optional[str] = None,
         difficulty: Optional[str] = None,
+        user_id: Optional[uuid.UUID] = None,
     ) -> QuestionPublic:
-        question = await question_repository.get_random_published(
-            db,
+        criteria = QuestionSelectionCriteria(
             subject=subject,
             difficulty=difficulty,
+            count=1,
+            avoid_recently_seen=True if user_id else False,
+            prefer_unseen=True if user_id else False,
         )
+        question = await QuestionSelectorService.select_single_question(
+            db=db,
+            criteria=criteria,
+            user_id=user_id,
+        )
+        if not question:
+            # Fallback to random repo query
+            question = await question_repository.get_random_published(
+                db,
+                subject=subject,
+                difficulty=difficulty,
+            )
         if not question:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

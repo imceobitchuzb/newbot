@@ -41,6 +41,7 @@ async def list_questions(
         skill=skill,
         difficulty=difficulty,
         limit=limit,
+        user_id=current_user.id,
     )
 
 
@@ -62,6 +63,7 @@ async def get_random_question(
         db=db,
         subject=subject,
         difficulty=difficulty,
+        user_id=current_user.id,
     )
 
 
